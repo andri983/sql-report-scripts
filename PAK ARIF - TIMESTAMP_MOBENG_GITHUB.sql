@@ -139,7 +139,8 @@ print_struk datetime NULL
 
 --RMS20
 --FUNTION INSERT
-SELECT * FROM dbo.MB_Trx_Timestamp('2025-05-01', '2025-05-01');
+--DROP FUNCTION dbo.MB_Trx_Timestamp
+--SELECT * FROM dbo.MB_Trx_Timestamp('2025-05-01', '2025-05-01');
 
 USE MB_DB_Reporting_SBY;
 GO
@@ -235,7 +236,6 @@ SELECT * FROM dbo.MB_Trx_Timestamp(@date1, @date2);
 -- MB_RMS20_RPT
 -- FOREIGN TABLE
 -- SELECT * FROM mb_rms20_rpt.mb_transaksi_timestamp definition
--- Drop table
 -- DROP FOREIGN TABLE mb_rms20_rpt.mb_transaksi_timestamp;
 
 CREATE FOREIGN TABLE mb_rms20_rpt.mb_transaksi_timestamp (
