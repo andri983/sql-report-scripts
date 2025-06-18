@@ -537,3 +537,57 @@ CREATE FOREIGN TABLE mb_rms10_rpt.mb_transaksi_timestamp (
 )
 SERVER mobeng_rms10_rpt
 OPTIONS (schema_name 'dbo', table_name 'MB_Transaksi_Timestamp');
+
+
+--------------------------------------------------------------------------------------------------------------------------
+
+
+SELECT 
+a.transaction_date as "TRANSACTION DATE",
+a.storecode as "STORE CODE",
+a.storename as "STORE NAME",
+a.nopol as "NOPOL",
+a.notrans as "NOTRANS",
+a.create_transaction as "CREATE TRANSACTION",
+a.trans_last_km as "TRANS LAST KM",
+a.input_checkup_awal as "INPUT CHECKUP AWAL",
+a.instalasi_time as "INSTALASI TIME",
+a.input_checkup_akhir as "INPUT CHECKUP AKHIR",
+a.pos_start_transaction_time as "POS START TRANSACTION TIME",
+a.print_struk as "PRINT STRUK"
+FROM mb_rms20_rpt.mb_transaksi_timestamp a;
+
+
+--------------------------------------------------------------------------------------------------------------------------
+
+
+Robotic Jobs Query Template
+Name
+imesta
+Search...
+ 
+	Display Name
+	/ REPORT TIMESTAMP MOBENG JAKARTA	 
+	/ REPORT TIMESTAMP MOBENG SURABAYA	 
+	
+
+Robotic Jobs Template Sheet
+Sheet name
+stamp
+Search...
+ 
+	Display Name
+	TIMESTAMP MOBENG JAKARTA	TIMESTAMP MOBENG JAKARTA / /	 	
+	TIMESTAMP MOBENG SURABAYA	TIMESTAMP MOBENG SURABAYA / /	 	
+	
+	
+Robotic Jobs
+Jobs name
+stamp
+Search...
+ 
+
+	REPORT_TIMESTAMP_MOBENG_SBY	Robotic Report Mailer	REPORT TIMESTAMP MOBENG SURABAYA	06/18/2025 10:57:13		 	OK
+	REPORT_TIMESTAMP_MOBENG_JKT	Robotic Report Mailer	REPORT TIMESTAMP MOBENG JAKARTA		06/18/2025 10:54:31		 	OK
+	
+	
