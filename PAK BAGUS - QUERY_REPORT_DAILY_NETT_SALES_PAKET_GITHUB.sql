@@ -25,7 +25,7 @@ where t1.namacabang ='Jakarta Baru'
 --and t1.idjenisproduk<>4 -- REMAKS UNTUK MENGELUARKAN DATA PAKET
 --and t1.statusproduk<>'K' -- REMAKS UNTUK MENGELUARKAN DATA PAKET
 and t1.kodetoko='3021001'
-and t1.nomortransaksi='202505010005'
+and t1.nomortransaksi='202506010005'
 and (t1.idjenisproduk=4 or t1.statusproduk='T')
 and 
 case
