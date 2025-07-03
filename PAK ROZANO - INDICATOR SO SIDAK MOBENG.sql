@@ -3024,10 +3024,11 @@ $function$
  refresh materialized view concurrently mb_rms10_mbdc.mv_transaksitokoheader_3months_temp;
  ----------------------------------------------------------------------------------------
  ----------------------------------------------------------------------------------------
--- DROP FUNCTION smi_rms10_rpt.fn_smi_indicator_sosidak_jkt(date, date);
+ --select * from mb_rms10_rpt.fn_smi_indicator_sosidak_sby('2024-06-01','2024-06-30')
+-- DROP FUNCTION mb_rms10_rpt.fn_smi_indicator_sosidak_sby(date, date);
 
-CREATE OR REPLACE FUNCTION smi_rms10_rpt.fn_smi_indicator_sosidak_jkt(start_date date, end_date date)
- RETURNS TABLE(snamacabang character varying, srh character varying, sac character varying, ikodetoko integer, snamatoko character varying, iintoleran_qty integer, ibalance_qty integer, iitemselisihqty integer, dshrinkagecategory double precision, dplus_qty double precision, dminus_qty double precision, dac_itemselisihqty double precision, davg_latencyqty double precision, deod_latencyqty double precision, inopolblakclist_qty integer, inopolrepeat integer, irrak_qty integer, idelimen_qty integer, dtotal_point double precision)
+CREATE OR REPLACE FUNCTION mb_rms10_rpt.fn_smi_indicator_sosidak_sby(start_date date, end_date date)
+ RETURNS TABLE(snamacabang character varying, srh character varying, sac character varying, ikodetoko integer, snamatoko text, iintoleran_qty integer, ibalance_qty integer, iitemselisihqty integer, dshrinkagecategory float8, dplus_qty float8, dminus_qty float8, dac_itemselisihqty float8, davg_latencyqty float8, deod_latencyqty float8, inopolblakclist_qty integer, inopolrepeat integer, irrak_qty integer, idelimen_qty integer, dtotal_point float8)
  LANGUAGE plpgsql
 AS $function$
 begin
@@ -3063,7 +3064,7 @@ begin
 --	                    and b.idcabang = 2 -- jkt
 --                    group by b.namacabang, a.rh, a.ac, b.singkatantoko, a.kodetoko, b.namatoko
                 )mp
-                left join (
+                left join (--//OK
                 -- Selisih SO(balance, minus and plus)
                         select 
                                 kodetoko, 
@@ -3079,7 +3080,8 @@ begin
                                         select so.kodetoko, so.nomorsoadjusment, sum(so.qtyselisih) qtyselisih 
                                         FROM mb_rms10_mbdc.mb_so_toko_cab_rpt_hist_rms10 so
                                         where so.tglsoadjusment between start_date and end_date
---		                        and so.kodetoko in(3021096, 3021001)
+--										where so.tglsoadjusment between '2025-05-01' and '2025-05-31'	
+--				                        and so.kodetoko in(3021096, 3021001)
                                         group by so.kodetoko, 
                                         so.nomorsoadjusment
                                 )sob
@@ -3087,7 +3089,7 @@ begin
                         )so
                         group by kodetoko
                 )sos on sos.kodetoko = mp.kodetoko
-                left join (
+                left join (--//OK
                 -- selisih item qty
                         select 
                                 kodetoko, 
@@ -3096,25 +3098,27 @@ begin
                                 select so.kodetoko, so.nomorsoadjusment, so.kodeproduk, sum(so.qtyselisih) qtyselisih 
                                 FROM mb_rms10_mbdc.mb_so_toko_cab_rpt_hist_rms10 so
                                 where so.tglsoadjusment between start_date and end_date
---				 and so.kodetoko in(3021096, 3021001)
+--								where so.tglsoadjusment between '2025-05-01' and '2025-05-31'
+--				 				and so.kodetoko in(3021096, 3021001)
                                 group by so.kodetoko, 
                                 so.nomorsoadjusment,so.kodeproduk
                         )sob where sob.qtyselisih != 0
                         group by kodetoko
                 )sp on sp.kodetoko = mp.kodetoko
-                left join (
+                left join (--//OK
                 -- selisih item qty by AC
                         select 
                                 kodetoko, 
                                 round(count(distinct(nomorsoadjusment, kodeproduk)) / 3) itemselisihqty -- baseon item
-                        from(
+                        from(--//OK
                                 select so.kodetoko, 
                                         so.nomorsoadjusment, 
                                         so.kodeproduk,
                                         sum(so.qtyselisih) qtyselisih 
                                 FROM mb_rms10_mbdc.mb_so_toko_cab_rpt_hist_rms10 so
-                                where so.tglsoadjusment between start_date and end_date 
---				 and so.kodetoko in(3021096, 3021001)
+                                where so.tglsoadjusment between start_date and end_date
+--								where so.tglsoadjusment between '2025-05-01' and '2025-05-31' 
+--								and so.kodetoko in(3021096, 3021001)
                                 and so.idUser not like '%KSR%' 
                                 and so.idUser not like '%KTO%' 
                                 and so.idUser not like '%IC%' 
@@ -3127,7 +3131,7 @@ begin
                 )spac on spac.kodetoko = mp.kodetoko
                 -- Man power
 --                 left join smi_rms10_rpt.fn_smi_shrinkage_bycategory_jkt(start_date, end_date) shr on shr.kdtoko = mp.kodetoko
-                left join(
+                left join(--//OK
                     select kodetoko::int, spd_avg::numeric,
                             intoleran_qty, categoryA, categoryB, categoryC, categoryD, categoryE,
                             (categoryA * 2) + (categoryB * 3) + (categoryC * 5) + (categoryD * 7) + (categoryE * 9) point
@@ -3169,7 +3173,7 @@ begin
                                                     sum(case when sx.monthly = -1 then sx.spd else 0 end) spd_min1,
                                                 sum(case when sx.monthly = -2 then sx.spd else 0 end) spd_min2,
                                                 sum(case when sx.monthly = -3 then sx.spd else 0 end) spd_min3
-                                        from(
+                                        from(--//OK
                                                     select sy.iYear, sy.iMonth, monthly, namacabang, kodetoko, spd_hpp, spd, case when shr.toleransi is null then 0.020 else shr.toleransi end toleransi
                                                     from
                                                     (select date_part('year', sls.tanggal) iYear, date_part('month', sls.tanggal) iMonth, namacabang, sls.kodetoko, 
@@ -3179,6 +3183,7 @@ begin
                                                     from PUBLIC.mb_rms10_transaksi_toko_perjenis_member_v3 sls 
                                                     where (
                                                             sls.tanggal between start_date and end_date
+--															sls.tanggal between '2025-06-01' and '2025-06-30'
                                                         )
                                                     group by date_part('year', sls.tanggal), date_part('month', sls.tanggal), namacabang, sls.kodetoko, 
                                                             extract(year from age(date_trunc('month', sls.tanggal) , date_trunc('month', current_date))) * 12 + extract(month from age(date_trunc('month', sls.tanggal) , date_trunc('month', current_date)))
@@ -3186,7 +3191,7 @@ begin
                                                     left join public.smi_shrinkage_toleransi_v shr on shr.iYear = sy.iYear and shr.iMonth = sy.iMonth
                                             )sx	group by namacabang, kodetoko
                                     )s 
-                                    left join(
+                                    left join(--//OK
                                             select kodetoko,
                                                     sum(case when shr.monthly = -1 then shr.selisihamount else 0 end) selisihamount_min1,
                                                     sum(case when shr.monthly = -2 then shr.selisihamount else 0 end) selisihamount_min2,
@@ -3198,13 +3203,14 @@ begin
                                                             sum(so.totalhrgjual) selisihamount
                                                     FROM mb_rms10_mbdc.mb_so_toko_cab_rpt_hist_rms10 so
                                                     where so.tglsoadjusment between start_date and end_date 
-                    --				and so.kodetoko in(3021001, 3021096)
+--													where so.tglsoadjusment between '2025-06-01' and '2025-06-30'
+--                    								and so.kodetoko in(3021001, 3021096)
                                                     and so.qtyselisih != 0
                                                     and so.alasan = 'Selisih Stock|Selisih Struk Penjualan' -- tambahan filter tgl 20230824
-                    --				and so.idUser not like '%KSR%' 
-                    --				and so.idUser not like '%KTO%' 
-                    --				and so.idUser not like '%IC%' 
-                    --				and so.iduser not in ('rozano','ROZANO','KTIO','KTP')
+--				                    				and so.idUser not like '%KSR%' 
+--				                    				and so.idUser not like '%KTO%' 
+--				                    				and so.idUser not like '%IC%' 
+--				                    				and so.iduser not in ('rozano','ROZANO','KTIO','KTP')
                                                     group by so.kodetoko, extract(year from age(date_trunc('month', so.tglsoadjusment) , date_trunc('month', current_date))) * 12 + extract(month from age(date_trunc('month', so.tglsoadjusment) , date_trunc('month', current_date)))
                                             )shr group by kodetoko
                                     )sh on sh.kodetoko = s.kodetoko
@@ -3213,7 +3219,7 @@ begin
                 
                 ) shr on shr.kodetoko = mp.kodetoko
                 left join (
-                -- latency setor
+                -- LATENCY SETOR//OK
                         select kodetoko, round(sum(latency) / 3) avg_latencyqty
                         from(
                                 select  
@@ -3230,22 +3236,25 @@ begin
                     select a.kodetoko,count(a.tglbisnis) eod_latencyqty 
                     from mb_rms10_mbdc.mv_TblTglBisnis a
                     where a.tglbisnis between start_date and end_date
-                    and a.tglbisnis::date <> a.tgleod::date -- and a.kodetoko in(3021012, 3021017)
+--                    where a.tglbisnis between '2025-06-01' and '2025-06-30'
+                    and a.tglbisnis::date <> a.tgleod::date 
+					-- and a.kodetoko in(3021012, 3021017)
                     group by a.kodetoko
                 )eodltc on eodltc.kodetoko = mp.kodetoko 
                 left join (
-                -- black list nopol
+                -- BLACK LIST NOPOL//OK
                      select a.kodetoko, count(distinct (a.nopolisi)) nopolblakclist_qty
                      from mb_rms10_transaksi_toko_perjenis_member_v3 a
                      join mb_rms01_mbho.mv_smimstplatblacklist b on b.nopolisi = a.nopolisi
-                     where --a.tanggal between start_date and end_date
-                     a.idjenisproduk <>4
+                   	 where a.tanggal between start_date and end_date
+--					 where a.tanggal between '2025-06-01' and '2025-06-30'
+                     and a.idjenisproduk <>4
                      and a.statusproduk<>'K'
                      --and a.kodetoko in ('3021001','3021004','3021135')
                      group by a.kodetoko
                 )blnp on blnp.kodetoko = mp.kodetoko
                 left join(
-                -- repeat nopol
+                -- REPEAT NOPOL//OK
                     select kodetoko, sum(qty) nopolrepeat
                     from (
                             select tanggal, kodetoko, nopolisi, count(*) qty
@@ -3253,6 +3262,7 @@ begin
 	                            SELECT a.tanggal, a.kodetoko, a.nopolisi, a.nomortransaksi
 	                            FROM mb_rms10_rpt.mb_rms10_transaksi_toko_perjenis_member_v3 a
 	                            where a.tanggal between start_date and end_date
+--								where a.tanggal between '2025-06-01' and '2025-06-30'
 	                            and a.idjenisproduk <>4
 	                            and a.statusproduk<>'K'
 	                            --and a.kodetoko  = 3021001
@@ -3262,24 +3272,24 @@ begin
                     )rp group by kodetoko
                 )rpnp on rpnp.kodetoko = mp.kodetoko
                 left join(
-                -- RRAK
+                -- RRAK//OK
                         select a.kodetoko,
                         count(distinct(a.tglapproverealisasi)) qty
                         from mb_rms10_mbdc.mv_tblrrakheader a
                         where a.tglcreate between start_date and end_date
---						where a.tglcreate between '2025-05-01' and '2025-05-31'
+--						where a.tglcreate between '2025-06-01' and '2025-06-30'
                         and  DATE_PART('day', a.tglapproverealisasi) >10
                         -- and a.kodetoko in ('3021001','3021004','3021135')
                         group by a.kodetoko
                 )rrak on rrak.kodetoko = mp.kodetoko
                 left join(
-                -- Hapus imen
+                -- HAPUS IMEN//OK
                     select a.kodetoko,count(DISTINCT concat(a.kodetoko, a.nomortransaksi, a.nomorimen))delimen_qty
                     from mb_rms10_mbdc.mv_smitbllogimen a
                         join mb_rms10_mbdc.mv_transaksitokoheader_3months_temp b 
                         on b.kodetoko=a.kodetoko and b.nomortransaksi=a.nomortransaksi
                     where b.tglbisnis between start_date and end_date
---                    where b.tglbisnis between '2025-05-01' and '2025-05-31'
+--                    where b.tglbisnis between '2025-06-01' and '2025-06-30'
 --                    and a.kodetoko in ('3021001','3021004','3021135')
                     group by a.kodetoko
                 )deli on deli.kodetoko = mp.kodetoko
@@ -3288,6 +3298,9 @@ begin
 $function$
 ;
  ----------------------------------------------------------------------------------------
+-- select * from mb_rms10_rpt.mv_smi_indicator_sosidak_jkt source
+-- mb_rms10_rpt.mv_smi_indicator_sosidak_jkt source
+
 CREATE MATERIALIZED VIEW mb_rms10_rpt.mv_smi_indicator_sosidak_jkt
 TABLESPACE pg_default
 AS SELECT mp.snamacabang,
@@ -3309,16 +3322,1221 @@ AS SELECT mp.snamacabang,
     mp.irrak_qty,
     mp.idelimen_qty,
     mp.dtotal_point
-   FROM mb_rms10_rpt.fn_smi_indicator_sosidak_jkt(date_trunc('month'::text, CURRENT_DATE + '-3 mons'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '1 mon -1 days'::interval)::date) mp(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
+   FROM mb_rms10_rpt.fn_smi_indicator_sosidak_sby(date_trunc('month'::text, CURRENT_DATE + '-3 mons'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '1 mon -1 days'::interval)::date) mp(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
 WITH DATA;
 
 -- View indexes:
 CREATE UNIQUE INDEX mv_smi_indicator_sosidak_jkt_ikodetoko_unique_idx ON mb_rms10_rpt.mv_smi_indicator_sosidak_jkt USING btree (ikodetoko);
  ----------------------------------------------------------------------------------------
+-- select * from mb_rms10_rpt.mv_smi_indicator_sosidak_w1_jkt source
+-- mb_rms10_rpt.mv_smi_indicator_sosidak_w1_jkt source
+
+CREATE MATERIALIZED VIEW mb_rms10_rpt.mv_smi_indicator_sosidak_w1_jkt
+TABLESPACE pg_default
+AS SELECT mp.snamacabang,
+    mp.srh,
+    mp.sac,
+    mp.ikodetoko,
+    mp.snamatoko,
+    mp.iintoleran_qty,
+    mp.ibalance_qty,
+    mp.iitemselisihqty,
+    mp.dshrinkagecategory,
+    mp.dplus_qty,
+    mp.dminus_qty,
+    mp.dac_itemselisihqty,
+    mp.davg_latencyqty,
+    mp.deod_latencyqty,
+    mp.inopolblakclist_qty,
+    mp.inopolrepeat,
+    mp.irrak_qty,
+    mp.idelimen_qty,
+    mp.dtotal_point
+   FROM mb_rms10_rpt.fn_smi_indicator_sosidak_sby(date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '6 days'::interval)::date) mp(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smi_indicator_sosidak_w1_jkt_ikodetoko_unique_idx ON mb_rms10_rpt.mv_smi_indicator_sosidak_w1_jkt USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms10_rpt.mv_smi_indicator_sosidak_w2_jkt source
+-- mb_rms10_rpt.mv_smi_indicator_sosidak_w2_jkt source
+
+CREATE MATERIALIZED VIEW mb_rms10_rpt.mv_smi_indicator_sosidak_w2_jkt
+TABLESPACE pg_default
+AS SELECT fn_smi_indicator_sosidak_sby.snamacabang,
+    fn_smi_indicator_sosidak_sby.srh,
+    fn_smi_indicator_sosidak_sby.sac,
+    fn_smi_indicator_sosidak_sby.ikodetoko,
+    fn_smi_indicator_sosidak_sby.snamatoko,
+    fn_smi_indicator_sosidak_sby.iintoleran_qty,
+    fn_smi_indicator_sosidak_sby.ibalance_qty,
+    fn_smi_indicator_sosidak_sby.iitemselisihqty,
+    fn_smi_indicator_sosidak_sby.dshrinkagecategory,
+    fn_smi_indicator_sosidak_sby.dplus_qty,
+    fn_smi_indicator_sosidak_sby.dminus_qty,
+    fn_smi_indicator_sosidak_sby.dac_itemselisihqty,
+    fn_smi_indicator_sosidak_sby.davg_latencyqty,
+    fn_smi_indicator_sosidak_sby.deod_latencyqty,
+    fn_smi_indicator_sosidak_sby.inopolblakclist_qty,
+    fn_smi_indicator_sosidak_sby.inopolrepeat,
+    fn_smi_indicator_sosidak_sby.irrak_qty,
+    fn_smi_indicator_sosidak_sby.idelimen_qty,
+    fn_smi_indicator_sosidak_sby.dtotal_point
+   FROM mb_rms10_rpt.fn_smi_indicator_sosidak_sby((date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '7 days'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '13 days'::interval)::date) fn_smi_indicator_sosidak_sby(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smi_indicator_sosidak_w2_jkt_ikodetoko_unique_idx ON mb_rms10_rpt.mv_smi_indicator_sosidak_w2_jkt USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms10_rpt.mv_smi_indicator_sosidak_w3_jkt source
+-- mb_rms10_rpt.mv_smi_indicator_sosidak_w3_jkt source
+
+CREATE MATERIALIZED VIEW mb_rms10_rpt.mv_smi_indicator_sosidak_w3_jkt
+TABLESPACE pg_default
+AS SELECT fn_smi_indicator_sosidak_sby.snamacabang,
+    fn_smi_indicator_sosidak_sby.srh,
+    fn_smi_indicator_sosidak_sby.sac,
+    fn_smi_indicator_sosidak_sby.ikodetoko,
+    fn_smi_indicator_sosidak_sby.snamatoko,
+    fn_smi_indicator_sosidak_sby.iintoleran_qty,
+    fn_smi_indicator_sosidak_sby.ibalance_qty,
+    fn_smi_indicator_sosidak_sby.iitemselisihqty,
+    fn_smi_indicator_sosidak_sby.dshrinkagecategory,
+    fn_smi_indicator_sosidak_sby.dplus_qty,
+    fn_smi_indicator_sosidak_sby.dminus_qty,
+    fn_smi_indicator_sosidak_sby.dac_itemselisihqty,
+    fn_smi_indicator_sosidak_sby.davg_latencyqty,
+    fn_smi_indicator_sosidak_sby.deod_latencyqty,
+    fn_smi_indicator_sosidak_sby.inopolblakclist_qty,
+    fn_smi_indicator_sosidak_sby.inopolrepeat,
+    fn_smi_indicator_sosidak_sby.irrak_qty,
+    fn_smi_indicator_sosidak_sby.idelimen_qty,
+    fn_smi_indicator_sosidak_sby.dtotal_point
+   FROM mb_rms10_rpt.fn_smi_indicator_sosidak_sby((date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '14 days'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '20 days'::interval)::date) fn_smi_indicator_sosidak_sby(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smi_indicator_sosidak_w3_jkt_ikodetoko_unique_idx ON mb_rms10_rpt.mv_smi_indicator_sosidak_w3_jkt USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms10_rpt.mv_smi_indicator_sosidak_w4_jkt source
+-- mb_rms10_rpt.mv_smi_indicator_sosidak_w4_jkt source
+
+CREATE MATERIALIZED VIEW mb_rms10_rpt.mv_smi_indicator_sosidak_w4_jkt
+TABLESPACE pg_default
+AS SELECT fn_smi_indicator_sosidak_sby.snamacabang,
+    fn_smi_indicator_sosidak_sby.srh,
+    fn_smi_indicator_sosidak_sby.sac,
+    fn_smi_indicator_sosidak_sby.ikodetoko,
+    fn_smi_indicator_sosidak_sby.snamatoko,
+    fn_smi_indicator_sosidak_sby.iintoleran_qty,
+    fn_smi_indicator_sosidak_sby.ibalance_qty,
+    fn_smi_indicator_sosidak_sby.iitemselisihqty,
+    fn_smi_indicator_sosidak_sby.dshrinkagecategory,
+    fn_smi_indicator_sosidak_sby.dplus_qty,
+    fn_smi_indicator_sosidak_sby.dminus_qty,
+    fn_smi_indicator_sosidak_sby.dac_itemselisihqty,
+    fn_smi_indicator_sosidak_sby.davg_latencyqty,
+    fn_smi_indicator_sosidak_sby.deod_latencyqty,
+    fn_smi_indicator_sosidak_sby.inopolblakclist_qty,
+    fn_smi_indicator_sosidak_sby.inopolrepeat,
+    fn_smi_indicator_sosidak_sby.irrak_qty,
+    fn_smi_indicator_sosidak_sby.idelimen_qty,
+    fn_smi_indicator_sosidak_sby.dtotal_point
+   FROM mb_rms10_rpt.fn_smi_indicator_sosidak_sby((date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '21 days'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '1 mon'::interval - '1 day'::interval)::date) fn_smi_indicator_sosidak_sby(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smi_indicator_sosidak_w4_jkt_ikodetoko_unique_idx ON mb_rms10_rpt.mv_smi_indicator_sosidak_w4_jkt USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms10_rpt.smi_mv_indicator_jkt source
+-- mb_rms10_rpt.smi_mv_indicator_jkt source
+
+CREATE MATERIALIZED VIEW mb_rms10_rpt.smi_mv_indicator_jkt
+TABLESPACE pg_default
+AS SELECT row_number() OVER () AS seq_no,
+    indicator_sheet.snamacabang,
+    indicator_sheet.srh,
+    indicator_sheet.sac,
+    indicator_sheet.ikodetoko,
+    indicator_sheet.snamatoko,
+    indicator_sheet.iintoleran_qty,
+    indicator_sheet.ibalance_qty,
+    indicator_sheet.iitemselisihqty,
+    indicator_sheet.dshrinkagecategory,
+    indicator_sheet.dplus_qty,
+    indicator_sheet.dminus_qty,
+    indicator_sheet.dac_itemselisihqty,
+    indicator_sheet.davg_latencyqty,
+    indicator_sheet.deod_latencyqty,
+    indicator_sheet.inopolblakclist_qty,
+    indicator_sheet.inopolrepeat,
+    indicator_sheet.irrak_qty,
+    indicator_sheet.idelimen_qty,
+    indicator_sheet.dtotal_point,
+    indicator_sheet.qty_rank,
+    indicator_sheet.w1_dtotal_point,
+    indicator_sheet.w1_qty_rank,
+    indicator_sheet.w2_dtotal_point,
+    indicator_sheet.w2_qty_rank,
+    indicator_sheet.w3_dtotal_point,
+    indicator_sheet.w3_qty_rank,
+    indicator_sheet.w4_dtotal_point,
+    indicator_sheet.w4_qty_rank
+   FROM ( SELECT s3m.snamacabang,
+            s3m.srh,
+            s3m.sac,
+            s3m.ikodetoko,
+            s3m.snamatoko,
+            s3m.iintoleran_qty,
+            s3m.ibalance_qty,
+            s3m.iitemselisihqty,
+            s3m.dshrinkagecategory,
+            s3m.dplus_qty,
+            s3m.dminus_qty,
+            s3m.dac_itemselisihqty,
+            s3m.davg_latencyqty,
+            s3m.deod_latencyqty,
+            s3m.inopolblakclist_qty,
+            s3m.inopolrepeat,
+            s3m.irrak_qty,
+            s3m.idelimen_qty,
+            s3m.dtotal_point,
+            s3m.qty_rank,
+            sw1.dtotal_point AS w1_dtotal_point,
+            sw1.qty_rank AS w1_qty_rank,
+            sw2.dtotal_point AS w2_dtotal_point,
+            sw2.qty_rank AS w2_qty_rank,
+            sw3.dtotal_point AS w3_dtotal_point,
+            sw3.qty_rank AS w3_qty_rank,
+            sw4.dtotal_point AS w4_dtotal_point,
+            sw4.qty_rank AS w4_qty_rank
+           FROM ( SELECT i.snamacabang,
+                    i.srh,
+                    i.sac,
+                    i.ikodetoko,
+                    i.snamatoko,
+                    i.iintoleran_qty,
+                    i.ibalance_qty,
+                    i.iitemselisihqty,
+                    i.dshrinkagecategory,
+                    i.dplus_qty,
+                    i.dminus_qty,
+                    i.dac_itemselisihqty,
+                    i.davg_latencyqty,
+                    i.deod_latencyqty,
+                    i.inopolblakclist_qty,
+                    i.inopolrepeat,
+                    i.irrak_qty,
+                    i.idelimen_qty,
+                    i.dtotal_point,
+                    rank() OVER (ORDER BY i.dtotal_point DESC) AS qty_rank
+                   FROM mb_rms10_rpt.mv_smi_indicator_sosidak_jkt i) s3m
+             LEFT JOIN ( SELECT i.snamacabang,
+                    i.srh,
+                    i.sac,
+                    i.ikodetoko,
+                    i.snamatoko,
+                    i.iintoleran_qty,
+                    i.ibalance_qty,
+                    i.iitemselisihqty,
+                    i.dshrinkagecategory,
+                    i.dplus_qty,
+                    i.dminus_qty,
+                    i.dac_itemselisihqty,
+                    i.davg_latencyqty,
+                    i.deod_latencyqty,
+                    i.inopolblakclist_qty,
+                    i.inopolrepeat,
+                    i.irrak_qty,
+                    i.idelimen_qty,
+                    i.dtotal_point,
+                    rank() OVER (ORDER BY i.dtotal_point DESC) AS qty_rank
+                   FROM mb_rms10_rpt.mv_smi_indicator_sosidak_w1_jkt i) sw1 ON sw1.ikodetoko = s3m.ikodetoko
+             LEFT JOIN ( SELECT i.snamacabang,
+                    i.srh,
+                    i.sac,
+                    i.ikodetoko,
+                    i.snamatoko,
+                    i.iintoleran_qty,
+                    i.ibalance_qty,
+                    i.iitemselisihqty,
+                    i.dshrinkagecategory,
+                    i.dplus_qty,
+                    i.dminus_qty,
+                    i.dac_itemselisihqty,
+                    i.davg_latencyqty,
+                    i.deod_latencyqty,
+                    i.inopolblakclist_qty,
+                    i.inopolrepeat,
+                    i.irrak_qty,
+                    i.idelimen_qty,
+                    i.dtotal_point,
+                    rank() OVER (ORDER BY i.dtotal_point DESC) AS qty_rank
+                   FROM mb_rms10_rpt.mv_smi_indicator_sosidak_w2_jkt i) sw2 ON sw2.ikodetoko = s3m.ikodetoko
+             LEFT JOIN ( SELECT i.snamacabang,
+                    i.srh,
+                    i.sac,
+                    i.ikodetoko,
+                    i.snamatoko,
+                    i.iintoleran_qty,
+                    i.ibalance_qty,
+                    i.iitemselisihqty,
+                    i.dshrinkagecategory,
+                    i.dplus_qty,
+                    i.dminus_qty,
+                    i.dac_itemselisihqty,
+                    i.davg_latencyqty,
+                    i.deod_latencyqty,
+                    i.inopolblakclist_qty,
+                    i.inopolrepeat,
+                    i.irrak_qty,
+                    i.idelimen_qty,
+                    i.dtotal_point,
+                    rank() OVER (ORDER BY i.dtotal_point DESC) AS qty_rank
+                   FROM mb_rms10_rpt.mv_smi_indicator_sosidak_w3_jkt i) sw3 ON sw3.ikodetoko = s3m.ikodetoko
+             LEFT JOIN ( SELECT i.snamacabang,
+                    i.srh,
+                    i.sac,
+                    i.ikodetoko,
+                    i.snamatoko,
+                    i.iintoleran_qty,
+                    i.ibalance_qty,
+                    i.iitemselisihqty,
+                    i.dshrinkagecategory,
+                    i.dplus_qty,
+                    i.dminus_qty,
+                    i.dac_itemselisihqty,
+                    i.davg_latencyqty,
+                    i.deod_latencyqty,
+                    i.inopolblakclist_qty,
+                    i.inopolrepeat,
+                    i.irrak_qty,
+                    i.idelimen_qty,
+                    i.dtotal_point,
+                    rank() OVER (ORDER BY i.dtotal_point DESC) AS qty_rank
+                   FROM mb_rms10_rpt.mv_smi_indicator_sosidak_w4_jkt i) sw4 ON sw4.ikodetoko = s3m.ikodetoko
+          ORDER BY s3m.qty_rank) indicator_sheet
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX smi_mv_indicator_jkt_ikodetoko_unique_idx ON mb_rms10_rpt.smi_mv_indicator_jkt USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt source
+-- mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt source
+
+CREATE MATERIALIZED VIEW mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt
+TABLESPACE pg_default
+AS SELECT ind.seq_no,
+    ind.snamacabang,
+    ind.srh,
+    ind.sac,
+    ind.ikodetoko,
+    ind.snamatoko,
+    ind.dtotal_point AS indicator_point,
+    mp.point AS mp_point,
+    sm.point AS sm_point,
+    COALESCE(ind.dtotal_point, 0::double precision) + COALESCE(mp.point, 0)::double precision + COALESCE(sm.point, 0::double precision) AS total_point
+   FROM mb_rms10_rpt.smi_mv_indicator_jkt ind
+     JOIN mb_rms01_mbho.smi_mv_manpower_history_temp mp ON mp.kodetoko = ind.ikodetoko
+     JOIN mb_rms01_mbho.mv_mastertoolstoko tk ON tk.kodetoko = mp.kodetoko
+     JOIN mb_rms01_mbho.mv_indicatorsosidak_salesmonitor_rpt sm ON sm.kodetoko = ind.ikodetoko::numeric
+  WHERE tk.idcabang = 2
+  ORDER BY ind.seq_no
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_indicatorsosidak_overview_jkt_rpt_ikodetoko_unique_idx ON mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt USING btree (ikodetoko);
+ ---------------------------------------------------------------------------------------- 
+-- select * from mb_rms10_mbdc.mv_smitbllogimen source
+-- mb_rms10_mbdc.mv_smitbllogimen source
+
+CREATE MATERIALIZED VIEW mb_rms10_mbdc.mv_smitbllogimen
+TABLESPACE pg_default
+AS SELECT smitbllogimen.kodetoko,
+    smitbllogimen.nomortransaksi,
+    smitbllogimen.nomorimen,
+    smitbllogimen.tglupload
+   FROM mb_rms10_mbdc.smitbllogimen
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smitbllogimen_kodetoko_unique_idx ON mb_rms10_mbdc.mv_smitbllogimen USING btree (kodetoko, nomortransaksi);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms10_mbdc.mv_transaksitokoheader_3months_temp source
+-- mb_rms10_mbdc.mv_transaksitokoheader_3months_temp source
+
+CREATE MATERIALIZED VIEW mb_rms10_mbdc.mv_transaksitokoheader_3months_temp
+TABLESPACE pg_default
+AS SELECT transaksitokoheader.kodetoko,
+    transaksitokoheader.nomortransaksi,
+    transaksitokoheader.tglbisnis,
+    transaksitokoheader.jenistransaksi,
+    transaksitokoheader.totalitem,
+    transaksitokoheader.totalqty,
+    transaksitokoheader.totalrp,
+    transaksitokoheader.totaldiskon,
+    transaksitokoheader.totalrppenjualan,
+    transaksitokoheader.totalpajak,
+    transaksitokoheader.totalrpbayar,
+    transaksitokoheader.selisihrpbayar,
+    transaksitokoheader.tglbayar,
+    transaksitokoheader.pointreedem,
+    transaksitokoheader.idusertoko,
+    transaksitokoheader.tglsettle,
+    transaksitokoheader.tglupload,
+    transaksitokoheader.tgluploadkeho,
+    transaksitokoheader.tglsync,
+    transaksitokoheader.nomorimen
+   FROM mb_rms10_mbdc.transaksitokoheader
+  WHERE transaksitokoheader.tglbisnis >= date_trunc('month'::text, CURRENT_DATE + '-3 mons'::interval) AND transaksitokoheader.tglbisnis <= (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '1 mon -1 days'::interval)::date
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_transaksitokoheader_3months_temp_kodetoko_idx ON mb_rms20_mbdc.mv_transaksitokoheader_3months_temp USING btree (kodetoko, nomortransaksi);
+CREATE UNIQUE INDEX mv_transaksitokoheader_3months_temp_kodetoko_unique_idx ON mb_rms20_mbdc.mv_transaksitokoheader_3months_temp USING btree (kodetoko, nomortransaksi);
+CREATE INDEX mv_transaksitokoheader_3months_temp_tglbisnis_idx ON mb_rms20_mbdc.mv_transaksitokoheader_3months_temp USING btree (tglbisnis);
+ ----------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------
+-- 30.iso_indicator_sosidak_sby
+ refresh materialized view concurrently smi_rms20_rpt.mv_smi_indicator_sosidak_sby;
+ refresh materialized view concurrently smi_rms20_rpt.mv_smi_indicator_sosidak_w1_sby;
+ refresh materialized view concurrently smi_rms20_rpt.mv_smi_indicator_sosidak_w2_sby;
+ refresh materialized view concurrently smi_rms20_rpt.mv_smi_indicator_sosidak_w3_sby;
+ refresh materialized view concurrently smi_rms20_rpt.mv_smi_indicator_sosidak_w4_sby;
+ refresh materialized view concurrently smi_rms20_rpt.smi_mv_indicator_sby;
+ refresh materialized view concurrently smi_rms20_rpt.mv_indicatorsosidak_overview_sby_rpt;
+ refresh materialized view concurrently smi_rms20_rpt.mv_indicatorsosidak_overview_smd_rpt;
+ refresh materialized view concurrently smi_rms20_pbdc.mv_SMITblLogImen;
+ refresh materialized view concurrently smi_rms20_pbdc.mv_transaksitokoheader_3months_temp;
+
+ refresh materialized view concurrently mb_rms20_rpt.mv_smi_indicator_sosidak_sby;
+ refresh materialized view concurrently mb_rms20_rpt.mv_smi_indicator_sosidak_w1_sby;
+ refresh materialized view concurrently mb_rms20_rpt.mv_smi_indicator_sosidak_w2_sby;
+ refresh materialized view concurrently mb_rms20_rpt.mv_smi_indicator_sosidak_w3_sby;
+ refresh materialized view concurrently mb_rms20_rpt.mv_smi_indicator_sosidak_w4_sby;
+ refresh materialized view concurrently mb_rms20_rpt.smi_mv_indicator_sby;
+ refresh materialized view concurrently mb_rms20_rpt.mv_indicatorsosidak_overview_sby_rpt;
+ refresh materialized view concurrently mb_rms20_mbdc.mv_SMITblLogImen;
+ refresh materialized view concurrently mb_rms20_rpt.mv_transaksitokoheader_3months_temp;
+ ----------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms20_rpt.fn_smi_indicator_sosidak_sby('2024-06-01','2024-06-30')
+-- DROP FUNCTION mb_rms20_rpt.fn_smi_indicator_sosidak_sby(date, date);
+
+CREATE OR REPLACE FUNCTION mb_rms20_rpt.fn_smi_indicator_sosidak_sby(start_date date, end_date date)
+ RETURNS TABLE(snamacabang character varying, srh character varying, sac character varying, ikodetoko integer, snamatoko text, iintoleran_qty integer, ibalance_qty integer, iitemselisihqty integer, dshrinkagecategory float8, dplus_qty float8, dminus_qty float8, dac_itemselisihqty float8, davg_latencyqty float8, deod_latencyqty float8, inopolblakclist_qty integer, inopolrepeat integer, irrak_qty integer, idelimen_qty integer, dtotal_point float8)
+ LANGUAGE plpgsql
+AS $function$
+begin
+	return query
+		select namacabang, rh, ac, kodetoko, namatoko,
+			intoleran_qty::int, balance_qty::int, itemselisihqty::int, shrinkagecategory::double precision, plus_qty::double precision, 
+            minus_qty::double precision, ac_itemselisihqty::double precision, avg_latencyqty::double precision, 
+            eod_latencyqty::double precision, nopolblakclist_qty::int, nopolrepeat::int, rrak_qty::int, delimen_qty::int,
+            round( (intoleran_qty * 50) + (balance_qty * 50) + (itemselisihqty * 20) + (shrinkagecategory * 20) + (plus_qty * 0) + 
+            (minus_qty * 0) + (ac_itemselisihqty * 0) + (avg_latencyqty * 35) + (eod_latencyqty * 8) + (nopolblakclist_qty * 6) +
+            (nopolrepeat * 15) + (rrak_qty * 5) + (delimen_qty * 5) )::double precision total_point
+            from(
+                select mp.namacabang, mp.rh, mp.ac, mp.kodetoko, mp.namatoko, coalesce(shr.intoleran_qty, 0) intoleran_qty, coalesce(sos.balance_qty, 0) balance_qty, coalesce(sp.itemselisihqty, 0) itemselisihqty, 
+                    coalesce(shr.point, 0) shrinkagecategory, coalesce(sos.plus_qty, 0) plus_qty, coalesce(sos.minus_qty, 0) minus_qty, coalesce(spac.itemselisihqty, 0) ac_itemselisihqty,
+                    coalesce(ltc.avg_latencyqty, 0) avg_latencyqty, coalesce(eodltc.eod_latencyqty, 0) eod_latencyqty, coalesce(blnp.nopolblakclist_qty, 0) nopolblakclist_qty, coalesce(rpnp.nopolrepeat, 0) nopolrepeat, 
+                    coalesce(rrak.qty, 0) rrak_qty, coalesce(deli.delimen_qty, 0) delimen_qty
+                from
+                (
+--	        		select b.namacabang, a.rh, a.ac, a.singkatantoko, a.kodetoko, b.namatoko
+--	                from smi_target_value_sales_perbulan_V2 a
+--	                join smi_msttokoho_rmsv3 as b on b.kodetoko=a.kodetoko
+--	                where a.tahuntarget=date_part('year', current_date + interval '-1 month')
+--	                and a.bulantarget=date_part('month', current_date + interval '-1 month')
+--	                and b.idcabang = 5 -- dps
+--	                group by b.namacabang, a.rh, a.ac, a.singkatantoko, a.kodetoko, b.namatoko
+                	-----#update target #Dec 2024
+                    select b.namacabang, a.rh, a.ac, b.singkatantoko, a.kodetoko, b.namatoko
+	                    from public.mb_alokasi_ac_rh a
+                  	join mb_rms01_mbho.v_mb_msttokoho_rmsv3 as b on b.kodetoko=a.kodetoko
+						where b.idcabang = 3 -- sby
+--	                    where a.tahun=date_part('year', current_date + interval '-1 month')
+--	                    and a.bulan=date_part('month', current_date + interval '-1 month')
+--	                    and b.idcabang = 2 -- jkt
+--                    group by b.namacabang, a.rh, a.ac, b.singkatantoko, a.kodetoko, b.namatoko
+                )mp
+                left join (--//OK
+                -- Selisih SO(balance, minus and plus)
+                        select 
+                                kodetoko, 
+                                sum(case when qtyselisih = 0 then qty else 0 end) balance_qty,
+                                round(sum(case when qtyselisih > 0 then qty else 0 end) / 3) plus_qty,
+                                round(sum(case when qtyselisih < 0 then qty else 0 end) / 3) minus_qty
+                        from(
+                                select 
+                                        kodetoko, 
+                                        qtyselisih,
+                                        count(distinct(nomorsoadjusment)) qty -- baseon nomor adjustment
+                                from(
+                                        select so.kodetoko, so.nomorsoadjusment, sum(so.qtyselisih) qtyselisih 
+                                        FROM mb_rms20_mbdc.mb_so_toko_cab_rpt_hist_rms20 so
+                                        where so.tglsoadjusment between start_date and end_date
+--										where so.tglsoadjusment between '2025-05-01' and '2025-05-31'	
+--				                        and so.kodetoko in(3021096, 3021001)
+                                        group by so.kodetoko, 
+                                        so.nomorsoadjusment
+                                )sob
+                                group by kodetoko, qtyselisih 
+                        )so
+                        group by kodetoko
+                )sos on sos.kodetoko = mp.kodetoko
+                left join (--//OK
+                -- selisih item qty
+                        select 
+                                kodetoko, 
+                                round(count(distinct(nomorsoadjusment, kodeproduk)) / 3) itemselisihqty -- baseon item
+                        from(
+                                select so.kodetoko, so.nomorsoadjusment, so.kodeproduk, sum(so.qtyselisih) qtyselisih 
+                                FROM mb_rms20_mbdc.mb_so_toko_cab_rpt_hist_rms20 so
+                                where so.tglsoadjusment between start_date and end_date
+--								where so.tglsoadjusment between '2025-05-01' and '2025-05-31'
+--				 				and so.kodetoko in(3021096, 3021001)
+                                group by so.kodetoko, 
+                                so.nomorsoadjusment,so.kodeproduk
+                        )sob where sob.qtyselisih != 0
+                        group by kodetoko
+                )sp on sp.kodetoko = mp.kodetoko
+                left join (--//OK
+                -- selisih item qty by AC
+                        select 
+                                kodetoko, 
+                                round(count(distinct(nomorsoadjusment, kodeproduk)) / 3) itemselisihqty -- baseon item
+                        from(--//OK
+                                select so.kodetoko, 
+                                        so.nomorsoadjusment, 
+                                        so.kodeproduk,
+                                        sum(so.qtyselisih) qtyselisih 
+                                FROM mb_rms20_mbdc.mb_so_toko_cab_rpt_hist_rms20 so
+                                where so.tglsoadjusment between start_date and end_date
+--								where so.tglsoadjusment between '2025-05-01' and '2025-05-31' 
+--								and so.kodetoko in(3021096, 3021001)
+                                and so.idUser not like '%KSR%' 
+                                and so.idUser not like '%KTO%' 
+                                and so.idUser not like '%IC%' 
+                                and so.iduser not in ('rozano','ROZANO','KTIO','KTP')
+                                and so.alasan IN ('Selisih Stock|Selisih Struk Penjualan', 'Selisih Stock|Selisih Stock Opname') -----#update penambahan kondisi #Dec 2024
+                                group by so.kodetoko, 
+                                so.nomorsoadjusment,so.kodeproduk
+                        )sob where sob.qtyselisih != 0
+                        group by kodetoko
+                )spac on spac.kodetoko = mp.kodetoko
+                -- Man power
+--                 left join smi_rms10_rpt.fn_smi_shrinkage_bycategory_jkt(start_date, end_date) shr on shr.kdtoko = mp.kodetoko
+                left join(--//OK
+                    select kodetoko::int, spd_avg::numeric,
+                            intoleran_qty, categoryA, categoryB, categoryC, categoryD, categoryE,
+                            (categoryA * 2) + (categoryB * 3) + (categoryC * 5) + (categoryD * 7) + (categoryE * 9) point
+                    from(
+                            select kodetoko, 
+                                    spd_avg, 
+                                    (case when abs(selisihamount_min1) > toleransiamount_min1 then 1 else 0 end) + 
+                                    (case when abs(selisihamount_min2) > toleransiamount_min2 then 1 else 0 end) +
+                                    (case when abs(selisihamount_min3) > toleransiamount_min3 then 1 else 0 end) intoleran_qty,
+                                    (case when abs(selisihamount_min1) > toleransiamount_min1 and abs(selisihamount_min1) <= 200000 then 1 else 0 end) + 
+                                    (case when abs(selisihamount_min2) > toleransiamount_min2 and abs(selisihamount_min2) <= 200000 then 1 else 0 end) +
+                                    (case when abs(selisihamount_min3) > toleransiamount_min3 and abs(selisihamount_min3) <= 200000 then 1 else 0 end) categoryA,
+                                    (case when abs(selisihamount_min1) > 200000 and abs(selisihamount_min1) <= 500000 then 1 else 0 end) + 
+                                    (case when abs(selisihamount_min2) > 200000 and abs(selisihamount_min2) <= 500000 then 1 else 0 end) +
+                                    (case when abs(selisihamount_min3) > 200000 and abs(selisihamount_min3) <= 500000 then 1 else 0 end) categoryB,
+                                    (case when abs(selisihamount_min1) > 500000 and abs(selisihamount_min1) <= 750000 then 1 else 0 end) +
+                                    (case when abs(selisihamount_min2) > 500000 and abs(selisihamount_min2) <= 750000 then 1 else 0 end) +
+                                    (case when abs(selisihamount_min3) > 500000 and abs(selisihamount_min3) <= 750000 then 1 else 0 end) categoryC,
+                                    (case when abs(selisihamount_min1) > 750000 and abs(selisihamount_min1) <= 1000000 then 1 else 0 end) +
+                                    (case when abs(selisihamount_min2) > 750000 and abs(selisihamount_min2) <= 1000000 then 1 else 0 end) +
+                                    (case when abs(selisihamount_min3) > 750000 and abs(selisihamount_min3) <= 1000000 then 1 else 0 end) categoryD,
+                                    (case when abs(selisihamount_min1) > 1000000 then 1 else 0 end) +
+                                    (case when abs(selisihamount_min2) > 1000000 then 1 else 0 end) +
+                                    (case when abs(selisihamount_min3) > 1000000 then 1 else 0 end) categoryE	
+                            from(
+                                    select s.kodetoko, 
+                                            s.spd_min1, s.spd_min2, s.spd_min3, 
+                                            round((s.spd_min1 + s.spd_min2 + s.spd_min3)/3) spd_avg, 
+                                            s.toleransi_min1, s.toleransi_min2, s.toleransi_min3,
+                                            sh.selisihamount_min1, sh.selisihamount_min2, sh.selisihamount_min3,
+                                            round(s.spd_min1 * s.toleransi_min1 / 100) toleransiamount_min1,
+                                            round(s.spd_min2 * s.toleransi_min2 / 100) toleransiamount_min2,
+                                            round(s.spd_min3 * s.toleransi_min3 / 100) toleransiamount_min3
+                                    from(
+                                            select namacabang, kodetoko,
+                                                    sum(case when sx.monthly = -1 then sx.toleransi else 0 end) toleransi_min1,
+                                                    sum(case when sx.monthly = -2 then sx.toleransi else 0 end) toleransi_min2,
+                                                    sum(case when sx.monthly = -3 then sx.toleransi else 0 end) toleransi_min3,
+                                                    sum(case when sx.monthly = -1 then sx.spd else 0 end) spd_min1,
+                                                sum(case when sx.monthly = -2 then sx.spd else 0 end) spd_min2,
+                                                sum(case when sx.monthly = -3 then sx.spd else 0 end) spd_min3
+                                        from(--//OK
+                                                    select sy.iYear, sy.iMonth, monthly, namacabang, kodetoko, spd_hpp, spd, case when shr.toleransi is null then 0.020 else shr.toleransi end toleransi
+                                                    from
+                                                    (select date_part('year', sls.tanggal) iYear, date_part('month', sls.tanggal) iMonth, namacabang, sls.kodetoko, 
+                                                            extract(year from age(date_trunc('month', sls.tanggal) , date_trunc('month', current_date))) * 12 + extract(month from age(date_trunc('month', sls.tanggal) , date_trunc('month', current_date))) monthly,
+                                                       sum(sls.qty * sls.hpp) spd_hpp,
+                                                      sum(sls.subtotal) spd
+                                                    from PUBLIC.mb_rms20_transaksi_toko_perjenis_member_v3 sls 
+                                                    where (
+                                                            sls.tanggal between start_date and end_date
+--															sls.tanggal between '2025-06-01' and '2025-06-30'
+                                                        )
+                                                    group by date_part('year', sls.tanggal), date_part('month', sls.tanggal), namacabang, sls.kodetoko, 
+                                                            extract(year from age(date_trunc('month', sls.tanggal) , date_trunc('month', current_date))) * 12 + extract(month from age(date_trunc('month', sls.tanggal) , date_trunc('month', current_date)))
+                                                    )sy
+                                                    left join public.smi_shrinkage_toleransi_v shr on shr.iYear = sy.iYear and shr.iMonth = sy.iMonth
+                                            )sx	group by namacabang, kodetoko
+                                    )s 
+                                    left join(--//OK
+                                            select kodetoko,
+                                                    sum(case when shr.monthly = -1 then shr.selisihamount else 0 end) selisihamount_min1,
+                                                    sum(case when shr.monthly = -2 then shr.selisihamount else 0 end) selisihamount_min2,
+                                                    sum(case when shr.monthly = -3 then shr.selisihamount else 0 end) selisihamount_min3
+                                            from(
+                                                    select 
+                                                            so.kodetoko,
+                                                            extract(year from age(date_trunc('month', so.tglsoadjusment) , date_trunc('month', current_date))) * 12 + extract(month from age(date_trunc('month', so.tglsoadjusment) , date_trunc('month', current_date))) monthly,
+                                                            sum(so.totalhrgjual) selisihamount
+                                                    FROM mb_rms20_mbdc.mb_so_toko_cab_rpt_hist_rms20 so
+                                                    where so.tglsoadjusment between start_date and end_date 
+--													where so.tglsoadjusment between '2025-06-01' and '2025-06-30'
+--                    								and so.kodetoko in(3021001, 3021096)
+                                                    and so.qtyselisih != 0
+                                                    and so.alasan = 'Selisih Stock|Selisih Struk Penjualan' -- tambahan filter tgl 20230824
+--				                    				and so.idUser not like '%KSR%' 
+--				                    				and so.idUser not like '%KTO%' 
+--				                    				and so.idUser not like '%IC%' 
+--				                    				and so.iduser not in ('rozano','ROZANO','KTIO','KTP')
+                                                    group by so.kodetoko, extract(year from age(date_trunc('month', so.tglsoadjusment) , date_trunc('month', current_date))) * 12 + extract(month from age(date_trunc('month', so.tglsoadjusment) , date_trunc('month', current_date)))
+                                            )shr group by kodetoko
+                                    )sh on sh.kodetoko = s.kodetoko
+                            )shrbc
+                    )shrbycategory
+                
+                ) shr on shr.kodetoko = mp.kodetoko
+                left join (
+                -- LATENCY SETOR//OK
+                        select kodetoko, round(sum(latency) / 3) avg_latencyqty
+                        from(
+                                select  
+                                        substring((response_body::jsonb ->> 'order')::jsonb ->> 'invoice_number', 4, 7) kodetoko,
+                                        case when (response_body::jsonb ->> 'virtual_account_info')::jsonb ->> 'how_to_pay_api' like '%doku%' and a.pay_in_date::date - a.sales_date::date = 1 then 1 else 0 end latency
+                                FROM smi_12up.smi_jokul_service_payment_codes a
+                                where a.sales_date between start_date and end_date
+                                and a.va_payment_status ='SUCCESS'
+                        )lt 
+                        where kodetoko is not null
+                        group by kodetoko
+                )ltc on ltc.kodetoko::int = mp.kodetoko
+                left join (
+                    select a.kodetoko,count(a.tglbisnis) eod_latencyqty 
+                    from mb_rms20_mbdc.mv_TblTglBisnis a
+                    where a.tglbisnis between start_date and end_date
+--                    where a.tglbisnis between '2025-06-01' and '2025-06-30'
+                    and a.tglbisnis::date <> a.tgleod::date 
+					-- and a.kodetoko in(3021012, 3021017)
+                    group by a.kodetoko
+                )eodltc on eodltc.kodetoko = mp.kodetoko 
+                left join (
+                -- BLACK LIST NOPOL//OK
+                     select a.kodetoko, count(distinct (a.nopolisi)) nopolblakclist_qty
+                     from mb_rms20_transaksi_toko_perjenis_member_v3 a
+                     join mb_rms01_mbho.mv_smimstplatblacklist b on b.nopolisi = a.nopolisi
+                   	 where a.tanggal between start_date and end_date
+--					 where a.tanggal between '2025-06-01' and '2025-06-30'
+                     and a.idjenisproduk <>4
+                     and a.statusproduk<>'K'
+                     --and a.kodetoko in ('3021001','3021004','3021135')
+                     group by a.kodetoko
+                )blnp on blnp.kodetoko = mp.kodetoko
+                left join(
+                -- REPEAT NOPOL//OK
+                    select kodetoko, sum(qty) nopolrepeat
+                    from (
+                            select tanggal, kodetoko, nopolisi, count(*) qty
+                            from(
+	                            SELECT a.tanggal, a.kodetoko, a.nopolisi, a.nomortransaksi
+	                            FROM mb_rms20_rpt.mb_rms20_transaksi_toko_perjenis_member_v3 a
+	                            where a.tanggal between start_date and end_date
+--								where a.tanggal between '2025-06-01' and '2025-06-30'
+	                            and a.idjenisproduk <>4
+	                            and a.statusproduk<>'K'
+	                            --and a.kodetoko  = 3021001
+	                            --and a.kodetoko in ('3021001','3021004','3021135')
+	                            group by a.tanggal, a.kodetoko, a.nopolisi, a.nomortransaksi
+                            )x group by tanggal, kodetoko, nopolisi having count(*) > 5 -----#update dari > 3 menjadi > 5 #Dec 2024
+                    )rp group by kodetoko
+                )rpnp on rpnp.kodetoko = mp.kodetoko
+                left join(
+                -- RRAK//OK
+                        select a.kodetoko,
+                        count(distinct(a.tglapproverealisasi)) qty
+                        from mb_rms20_mbdc.mv_tblrrakheader a
+                        where a.tglcreate between start_date and end_date
+--						where a.tglcreate between '2025-06-01' and '2025-06-30'
+                        and  DATE_PART('day', a.tglapproverealisasi) >10
+                        -- and a.kodetoko in ('3021001','3021004','3021135')
+                        group by a.kodetoko
+                )rrak on rrak.kodetoko = mp.kodetoko
+                left join(
+                -- HAPUS IMEN//OK
+                    select a.kodetoko,count(DISTINCT concat(a.kodetoko, a.nomortransaksi, a.nomorimen))delimen_qty
+                    from mb_rms20_mbdc.mv_smitbllogimen a
+                    join mb_rms20_mbdc.mv_transaksitokoheader_3months_temp b 
+                    on b.kodetoko=a.kodetoko and b.nomortransaksi=a.nomortransaksi
+                    where b.tglbisnis between start_date and end_date
+--                    where b.tglbisnis between '2025-06-01' and '2025-06-30'
+--                    and a.kodetoko in ('3021001','3021004','3021135')
+                    group by a.kodetoko
+                )deli on deli.kodetoko = mp.kodetoko
+            )ind;
+	end;
+$function$
+;
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms20_rpt.mv_smi_indicator_sosidak_sby source
+-- mb_rms20_rpt.mv_smi_indicator_sosidak_jkt source
+
+CREATE MATERIALIZED VIEW mb_rms20_rpt.mv_smi_indicator_sosidak_sby
+TABLESPACE pg_default
+AS SELECT mp.snamacabang,
+    mp.srh,
+    mp.sac,
+    mp.ikodetoko,
+    mp.snamatoko,
+    mp.iintoleran_qty,
+    mp.ibalance_qty,
+    mp.iitemselisihqty,
+    mp.dshrinkagecategory,
+    mp.dplus_qty,
+    mp.dminus_qty,
+    mp.dac_itemselisihqty,
+    mp.davg_latencyqty,
+    mp.deod_latencyqty,
+    mp.inopolblakclist_qty,
+    mp.inopolrepeat,
+    mp.irrak_qty,
+    mp.idelimen_qty,
+    mp.dtotal_point
+   FROM mb_rms20_rpt.fn_smi_indicator_sosidak_sby(date_trunc('month'::text, CURRENT_DATE + '-3 mons'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '1 mon -1 days'::interval)::date) mp(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smi_indicator_sosidak_sby_ikodetoko_unique_idx ON mb_rms20_rpt.mv_smi_indicator_sosidak_sby USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms20_rpt.mv_smi_indicator_sosidak_w1_sby source
+-- mb_rms20_rpt.mv_smi_indicator_sosidak_w1_sby source
+
+CREATE MATERIALIZED VIEW mb_rms20_rpt.mv_smi_indicator_sosidak_w1_sby
+TABLESPACE pg_default
+AS SELECT mp.snamacabang,
+    mp.srh,
+    mp.sac,
+    mp.ikodetoko,
+    mp.snamatoko,
+    mp.iintoleran_qty,
+    mp.ibalance_qty,
+    mp.iitemselisihqty,
+    mp.dshrinkagecategory,
+    mp.dplus_qty,
+    mp.dminus_qty,
+    mp.dac_itemselisihqty,
+    mp.davg_latencyqty,
+    mp.deod_latencyqty,
+    mp.inopolblakclist_qty,
+    mp.inopolrepeat,
+    mp.irrak_qty,
+    mp.idelimen_qty,
+    mp.dtotal_point
+   FROM mb_rms20_rpt.fn_smi_indicator_sosidak_sby(date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '6 days'::interval)::date) mp(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smi_indicator_sosidak_w1_sby_ikodetoko_unique_idx ON mb_rms20_rpt.mv_smi_indicator_sosidak_w1_sby USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms20_rpt.mv_smi_indicator_sosidak_w2_sby source
+-- mb_rms20_rpt.mv_smi_indicator_sosidak_w2_sby source
+
+CREATE MATERIALIZED VIEW mb_rms20_rpt.mv_smi_indicator_sosidak_w2_sby
+TABLESPACE pg_default
+AS SELECT fn_smi_indicator_sosidak_sby.snamacabang,
+    fn_smi_indicator_sosidak_sby.srh,
+    fn_smi_indicator_sosidak_sby.sac,
+    fn_smi_indicator_sosidak_sby.ikodetoko,
+    fn_smi_indicator_sosidak_sby.snamatoko,
+    fn_smi_indicator_sosidak_sby.iintoleran_qty,
+    fn_smi_indicator_sosidak_sby.ibalance_qty,
+    fn_smi_indicator_sosidak_sby.iitemselisihqty,
+    fn_smi_indicator_sosidak_sby.dshrinkagecategory,
+    fn_smi_indicator_sosidak_sby.dplus_qty,
+    fn_smi_indicator_sosidak_sby.dminus_qty,
+    fn_smi_indicator_sosidak_sby.dac_itemselisihqty,
+    fn_smi_indicator_sosidak_sby.davg_latencyqty,
+    fn_smi_indicator_sosidak_sby.deod_latencyqty,
+    fn_smi_indicator_sosidak_sby.inopolblakclist_qty,
+    fn_smi_indicator_sosidak_sby.inopolrepeat,
+    fn_smi_indicator_sosidak_sby.irrak_qty,
+    fn_smi_indicator_sosidak_sby.idelimen_qty,
+    fn_smi_indicator_sosidak_sby.dtotal_point
+   FROM mb_rms20_rpt.fn_smi_indicator_sosidak_sby((date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '7 days'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '13 days'::interval)::date) fn_smi_indicator_sosidak_sby(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smi_indicator_sosidak_w2_sby_ikodetoko_unique_idx ON mb_rms20_rpt.mv_smi_indicator_sosidak_w2_sby USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms20_rpt.mv_smi_indicator_sosidak_w3_sby source
+-- mb_rms20_rpt.mv_smi_indicator_sosidak_w3_sby source
+
+CREATE MATERIALIZED VIEW mb_rms20_rpt.mv_smi_indicator_sosidak_w3_sby
+TABLESPACE pg_default
+AS SELECT fn_smi_indicator_sosidak_sby.snamacabang,
+    fn_smi_indicator_sosidak_sby.srh,
+    fn_smi_indicator_sosidak_sby.sac,
+    fn_smi_indicator_sosidak_sby.ikodetoko,
+    fn_smi_indicator_sosidak_sby.snamatoko,
+    fn_smi_indicator_sosidak_sby.iintoleran_qty,
+    fn_smi_indicator_sosidak_sby.ibalance_qty,
+    fn_smi_indicator_sosidak_sby.iitemselisihqty,
+    fn_smi_indicator_sosidak_sby.dshrinkagecategory,
+    fn_smi_indicator_sosidak_sby.dplus_qty,
+    fn_smi_indicator_sosidak_sby.dminus_qty,
+    fn_smi_indicator_sosidak_sby.dac_itemselisihqty,
+    fn_smi_indicator_sosidak_sby.davg_latencyqty,
+    fn_smi_indicator_sosidak_sby.deod_latencyqty,
+    fn_smi_indicator_sosidak_sby.inopolblakclist_qty,
+    fn_smi_indicator_sosidak_sby.inopolrepeat,
+    fn_smi_indicator_sosidak_sby.irrak_qty,
+    fn_smi_indicator_sosidak_sby.idelimen_qty,
+    fn_smi_indicator_sosidak_sby.dtotal_point
+   FROM mb_rms20_rpt.fn_smi_indicator_sosidak_sby((date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '14 days'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '20 days'::interval)::date) fn_smi_indicator_sosidak_sby(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smi_indicator_sosidak_w3_sby_ikodetoko_unique_idx ON mb_rms20_rpt.mv_smi_indicator_sosidak_w3_sby USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms20_rpt.mv_smi_indicator_sosidak_w4_sby source
+-- mb_rms20_rpt.mv_smi_indicator_sosidak_w4_sby source
+
+CREATE MATERIALIZED VIEW mb_rms20_rpt.mv_smi_indicator_sosidak_w4_sby
+TABLESPACE pg_default
+AS SELECT fn_smi_indicator_sosidak_sby.snamacabang,
+    fn_smi_indicator_sosidak_sby.srh,
+    fn_smi_indicator_sosidak_sby.sac,
+    fn_smi_indicator_sosidak_sby.ikodetoko,
+    fn_smi_indicator_sosidak_sby.snamatoko,
+    fn_smi_indicator_sosidak_sby.iintoleran_qty,
+    fn_smi_indicator_sosidak_sby.ibalance_qty,
+    fn_smi_indicator_sosidak_sby.iitemselisihqty,
+    fn_smi_indicator_sosidak_sby.dshrinkagecategory,
+    fn_smi_indicator_sosidak_sby.dplus_qty,
+    fn_smi_indicator_sosidak_sby.dminus_qty,
+    fn_smi_indicator_sosidak_sby.dac_itemselisihqty,
+    fn_smi_indicator_sosidak_sby.davg_latencyqty,
+    fn_smi_indicator_sosidak_sby.deod_latencyqty,
+    fn_smi_indicator_sosidak_sby.inopolblakclist_qty,
+    fn_smi_indicator_sosidak_sby.inopolrepeat,
+    fn_smi_indicator_sosidak_sby.irrak_qty,
+    fn_smi_indicator_sosidak_sby.idelimen_qty,
+    fn_smi_indicator_sosidak_sby.dtotal_point
+   FROM mb_rms20_rpt.fn_smi_indicator_sosidak_sby((date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '21 days'::interval)::date, (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '1 mon'::interval - '1 day'::interval)::date) fn_smi_indicator_sosidak_sby(snamacabang, srh, sac, ikodetoko, snamatoko, iintoleran_qty, ibalance_qty, iitemselisihqty, dshrinkagecategory, dplus_qty, dminus_qty, dac_itemselisihqty, davg_latencyqty, deod_latencyqty, inopolblakclist_qty, inopolrepeat, irrak_qty, idelimen_qty, dtotal_point)
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smi_indicator_sosidak_w4_sby_ikodetoko_unique_idx ON mb_rms20_rpt.mv_smi_indicator_sosidak_w4_sby USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms20_rpt.smi_mv_indicator_sby source
+-- mb_rms20_rpt.smi_mv_indicator_sby source
+
+CREATE MATERIALIZED VIEW mb_rms20_rpt.smi_mv_indicator_sby
+TABLESPACE pg_default
+AS SELECT row_number() OVER () AS seq_no,
+    indicator_sheet.snamacabang,
+    indicator_sheet.srh,
+    indicator_sheet.sac,
+    indicator_sheet.ikodetoko,
+    indicator_sheet.snamatoko,
+    indicator_sheet.iintoleran_qty,
+    indicator_sheet.ibalance_qty,
+    indicator_sheet.iitemselisihqty,
+    indicator_sheet.dshrinkagecategory,
+    indicator_sheet.dplus_qty,
+    indicator_sheet.dminus_qty,
+    indicator_sheet.dac_itemselisihqty,
+    indicator_sheet.davg_latencyqty,
+    indicator_sheet.deod_latencyqty,
+    indicator_sheet.inopolblakclist_qty,
+    indicator_sheet.inopolrepeat,
+    indicator_sheet.irrak_qty,
+    indicator_sheet.idelimen_qty,
+    indicator_sheet.dtotal_point,
+    indicator_sheet.qty_rank,
+    indicator_sheet.w1_dtotal_point,
+    indicator_sheet.w1_qty_rank,
+    indicator_sheet.w2_dtotal_point,
+    indicator_sheet.w2_qty_rank,
+    indicator_sheet.w3_dtotal_point,
+    indicator_sheet.w3_qty_rank,
+    indicator_sheet.w4_dtotal_point,
+    indicator_sheet.w4_qty_rank
+   FROM ( SELECT s3m.snamacabang,
+            s3m.srh,
+            s3m.sac,
+            s3m.ikodetoko,
+            s3m.snamatoko,
+            s3m.iintoleran_qty,
+            s3m.ibalance_qty,
+            s3m.iitemselisihqty,
+            s3m.dshrinkagecategory,
+            s3m.dplus_qty,
+            s3m.dminus_qty,
+            s3m.dac_itemselisihqty,
+            s3m.davg_latencyqty,
+            s3m.deod_latencyqty,
+            s3m.inopolblakclist_qty,
+            s3m.inopolrepeat,
+            s3m.irrak_qty,
+            s3m.idelimen_qty,
+            s3m.dtotal_point,
+            s3m.qty_rank,
+            sw1.dtotal_point AS w1_dtotal_point,
+            sw1.qty_rank AS w1_qty_rank,
+            sw2.dtotal_point AS w2_dtotal_point,
+            sw2.qty_rank AS w2_qty_rank,
+            sw3.dtotal_point AS w3_dtotal_point,
+            sw3.qty_rank AS w3_qty_rank,
+            sw4.dtotal_point AS w4_dtotal_point,
+            sw4.qty_rank AS w4_qty_rank
+           FROM ( SELECT i.snamacabang,
+                    i.srh,
+                    i.sac,
+                    i.ikodetoko,
+                    i.snamatoko,
+                    i.iintoleran_qty,
+                    i.ibalance_qty,
+                    i.iitemselisihqty,
+                    i.dshrinkagecategory,
+                    i.dplus_qty,
+                    i.dminus_qty,
+                    i.dac_itemselisihqty,
+                    i.davg_latencyqty,
+                    i.deod_latencyqty,
+                    i.inopolblakclist_qty,
+                    i.inopolrepeat,
+                    i.irrak_qty,
+                    i.idelimen_qty,
+                    i.dtotal_point,
+                    rank() OVER (ORDER BY i.dtotal_point DESC) AS qty_rank
+                   FROM mb_rms20_rpt.mv_smi_indicator_sosidak_sby i) s3m
+             LEFT JOIN ( SELECT i.snamacabang,
+                    i.srh,
+                    i.sac,
+                    i.ikodetoko,
+                    i.snamatoko,
+                    i.iintoleran_qty,
+                    i.ibalance_qty,
+                    i.iitemselisihqty,
+                    i.dshrinkagecategory,
+                    i.dplus_qty,
+                    i.dminus_qty,
+                    i.dac_itemselisihqty,
+                    i.davg_latencyqty,
+                    i.deod_latencyqty,
+                    i.inopolblakclist_qty,
+                    i.inopolrepeat,
+                    i.irrak_qty,
+                    i.idelimen_qty,
+                    i.dtotal_point,
+                    rank() OVER (ORDER BY i.dtotal_point DESC) AS qty_rank
+                   FROM mb_rms20_rpt.mv_smi_indicator_sosidak_w1_sby i) sw1 ON sw1.ikodetoko = s3m.ikodetoko
+             LEFT JOIN ( SELECT i.snamacabang,
+                    i.srh,
+                    i.sac,
+                    i.ikodetoko,
+                    i.snamatoko,
+                    i.iintoleran_qty,
+                    i.ibalance_qty,
+                    i.iitemselisihqty,
+                    i.dshrinkagecategory,
+                    i.dplus_qty,
+                    i.dminus_qty,
+                    i.dac_itemselisihqty,
+                    i.davg_latencyqty,
+                    i.deod_latencyqty,
+                    i.inopolblakclist_qty,
+                    i.inopolrepeat,
+                    i.irrak_qty,
+                    i.idelimen_qty,
+                    i.dtotal_point,
+                    rank() OVER (ORDER BY i.dtotal_point DESC) AS qty_rank
+                   FROM mb_rms20_rpt.mv_smi_indicator_sosidak_w2_sby i) sw2 ON sw2.ikodetoko = s3m.ikodetoko
+             LEFT JOIN ( SELECT i.snamacabang,
+                    i.srh,
+                    i.sac,
+                    i.ikodetoko,
+                    i.snamatoko,
+                    i.iintoleran_qty,
+                    i.ibalance_qty,
+                    i.iitemselisihqty,
+                    i.dshrinkagecategory,
+                    i.dplus_qty,
+                    i.dminus_qty,
+                    i.dac_itemselisihqty,
+                    i.davg_latencyqty,
+                    i.deod_latencyqty,
+                    i.inopolblakclist_qty,
+                    i.inopolrepeat,
+                    i.irrak_qty,
+                    i.idelimen_qty,
+                    i.dtotal_point,
+                    rank() OVER (ORDER BY i.dtotal_point DESC) AS qty_rank
+                   FROM mb_rms20_rpt.mv_smi_indicator_sosidak_w3_sby i) sw3 ON sw3.ikodetoko = s3m.ikodetoko
+             LEFT JOIN ( SELECT i.snamacabang,
+                    i.srh,
+                    i.sac,
+                    i.ikodetoko,
+                    i.snamatoko,
+                    i.iintoleran_qty,
+                    i.ibalance_qty,
+                    i.iitemselisihqty,
+                    i.dshrinkagecategory,
+                    i.dplus_qty,
+                    i.dminus_qty,
+                    i.dac_itemselisihqty,
+                    i.davg_latencyqty,
+                    i.deod_latencyqty,
+                    i.inopolblakclist_qty,
+                    i.inopolrepeat,
+                    i.irrak_qty,
+                    i.idelimen_qty,
+                    i.dtotal_point,
+                    rank() OVER (ORDER BY i.dtotal_point DESC) AS qty_rank
+                   FROM mb_rms20_rpt.mv_smi_indicator_sosidak_w4_sby i) sw4 ON sw4.ikodetoko = s3m.ikodetoko
+          ORDER BY s3m.qty_rank) indicator_sheet
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX smi_mv_indicator_sby_ikodetoko_unique_idx ON mb_rms20_rpt.smi_mv_indicator_sby USING btree (ikodetoko);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms20_rpt.mv_indicatorsosidak_overview_sby_rpt source
+-- mb_rms20_rpt.mv_indicatorsosidak_overview_sby_rpt source
+
+CREATE MATERIALIZED VIEW mb_rms20_rpt.mv_indicatorsosidak_overview_sby_rpt
+TABLESPACE pg_default
+AS SELECT ind.seq_no,
+    ind.snamacabang,
+    ind.srh,
+    ind.sac,
+    ind.ikodetoko,
+    ind.snamatoko,
+    ind.dtotal_point AS indicator_point,
+    mp.point AS mp_point,
+    sm.point AS sm_point,
+    COALESCE(ind.dtotal_point, 0::double precision) + COALESCE(mp.point, 0)::double precision + COALESCE(sm.point, 0::double precision) AS total_point
+   FROM mb_rms20_rpt.smi_mv_indicator_sby ind
+     JOIN mb_rms01_mbho.smi_mv_manpower_history_temp mp ON mp.kodetoko = ind.ikodetoko
+     JOIN mb_rms01_mbho.mv_mastertoolstoko tk ON tk.kodetoko = mp.kodetoko
+     JOIN mb_rms01_mbho.mv_indicatorsosidak_salesmonitor_rpt sm ON sm.kodetoko = ind.ikodetoko::numeric
+  WHERE tk.idcabang = 3
+  ORDER BY ind.seq_no
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_indicatorsosidak_overview_sby_rpt_ikodetoko_unique_idx ON mb_rms20_rpt.mv_indicatorsosidak_overview_sby_rpt USING btree (ikodetoko);
+ ---------------------------------------------------------------------------------------- 
+-- select * from mb_rms20_mbdc.mv_smitbllogimen source
+-- mb_rms20_mbdc.mv_smitbllogimen source
+
+CREATE MATERIALIZED VIEW mb_rms20_mbdc.mv_smitbllogimen
+TABLESPACE pg_default
+AS SELECT smitbllogimen.kodetoko,
+    smitbllogimen.nomortransaksi,
+    smitbllogimen.nomorimen,
+    smitbllogimen.tglupload
+   FROM mb_rms20_mbdc.smitbllogimen
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_smitbllogimen_kodetoko_unique_idx ON mb_rms20_mbdc.mv_smitbllogimen USING btree (kodetoko, nomortransaksi);
+ ----------------------------------------------------------------------------------------
+-- select * from mb_rms20_mbdc.mv_transaksitokoheader_3months_temp source
+-- mb_rms20_mbdc.mv_transaksitokoheader_3months_temp source
+
+CREATE MATERIALIZED VIEW mb_rms20_mbdc.mv_transaksitokoheader_3months_temp
+TABLESPACE pg_default
+AS SELECT transaksitokoheader.kodetoko,
+    transaksitokoheader.nomortransaksi,
+    transaksitokoheader.tglbisnis,
+    transaksitokoheader.jenistransaksi,
+    transaksitokoheader.totalitem,
+    transaksitokoheader.totalqty,
+    transaksitokoheader.totalrp,
+    transaksitokoheader.totaldiskon,
+    transaksitokoheader.totalrppenjualan,
+    transaksitokoheader.totalpajak,
+    transaksitokoheader.totalrpbayar,
+    transaksitokoheader.selisihrpbayar,
+    transaksitokoheader.tglbayar,
+    transaksitokoheader.pointreedem,
+    transaksitokoheader.idusertoko,
+    transaksitokoheader.tglsettle,
+    transaksitokoheader.tglupload,
+    transaksitokoheader.tgluploadkeho,
+    transaksitokoheader.tglsync,
+    transaksitokoheader.nomorimen
+   FROM mb_rms20_mbdc.transaksitokoheader
+  WHERE transaksitokoheader.tglbisnis >= date_trunc('month'::text, CURRENT_DATE + '-3 mons'::interval) AND transaksitokoheader.tglbisnis <= (date_trunc('month'::text, CURRENT_DATE + '-1 mons'::interval) + '1 mon -1 days'::interval)::date
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mv_transaksitokoheader_3months_temp_kodetoko_idx ON mb_rms20_mbdc.mv_transaksitokoheader_3months_temp USING btree (kodetoko, nomortransaksi);
+CREATE UNIQUE INDEX mv_transaksitokoheader_3months_temp_kodetoko_unique_idx ON mb_rms20_mbdc.mv_transaksitokoheader_3months_temp USING btree (kodetoko, nomortransaksi);
+CREATE INDEX mv_transaksitokoheader_3months_temp_tglbisnis_idx ON mb_rms20_mbdc.mv_transaksitokoheader_3months_temp USING btree (tglbisnis);
+ ----------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------
+REPORT INDICATOR SIDAK SO - OVERVIEW SHEET - JKT
+
+select 
+    row_number() over () as "NO",
+    overview.*
+from(
+select
+    snamacabang as "CABANG",
+	srh as "RH",
+	sac as "AC",
+	ikodetoko as "KD TOKO",
+	snamatoko as "NAMA TOKO",
+	indicator_point as "Nilai Indicator",
+	mp_point as "Poin MP",
+	sm_point as "POIN Sales Monitor", 
+	total_point as "Grand Total", 
+--	gnd.total,
+	round(((total_point / gnd.total) * 100 * 100)::numeric) as "Rasio", 
+	case 		
+		when round(((total_point / gnd.total) * 100 * 100)::numeric) < 75 then 'Low Risk' -- Rasio yang < 75%
+		when round(((total_point / gnd.total) * 100 * 100)::numeric) >= 75 and round(((total_point / gnd.total) * 100 * 100)::numeric) < 90 then 'Medium' -- Rasio yang >= 75% and <90
+		when round(((total_point / gnd.total) * 100 * 100)::numeric) >= 90 then 'High Risk' -- =Rasio yang diatas 90%
+	end "Notif"
+    from
+    (select 
+            ov.seq_no,
+            ov.snamacabang,
+            ov.srh,
+            ov.sac,
+            ov.ikodetoko,
+            ov.snamatoko,
+            ov.indicator_point,
+            ov.mp_point,
+            ov.sm_point, 
+            ov.total_point,	
+            'a' dummy
+    from mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt ov)overview_sheet
+    inner join (
+            select 'a' dummy, sum(total_point) total from mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt
+    ) gnd on gnd.dummy = overview_sheet.dummy order by total_point desc
+)overview;
+ ----------------------------------------------------------------------------------------
+REPORT INDICATOR SIDAK SO - MP HISTORY SHEET - JKT
+
+select 
+	row_number() over () as "NO", 
+	mp.nik as "NIK",
+	mp.nama as "NAMA KARYAWAN",
+	mp.posisi as "JABATAN LEADER",
+	mp.kodetoko as "KD TOKO SAAT INI",
+	mp.namatoko as "NAMA TOKO SAAT INI",
+	mp.spd_avg as "AVG Sales Per Month",
+	mp.intoleran_qty as "> Toleransi",
+	mp.categorya as "KATEGORI A",
+	mp.categoryb as "KATEGORI B",
+	mp.categoryc as "KATEGORI C",
+	mp.categoryd as "KATEGORI D",
+	mp.categorye as "KATEGORI E",
+	mp.point as "TOTAL POIN"/*,
+	mp.kodetoko as "KD TOKO SEBELUMNYA",
+	mp.namatoko as "NAMA TOKO SEBELUMNYA"*/
+from mb_rms01_mbho.smi_mv_manpower_history_temp mp
+inner join mb_rms01_mbho.mv_mastertoolstoko tk on tk.kodetoko = mp.kodetoko 
+where tk.idcabang = 2 -- JKT
+ ----------------------------------------------------------------------------------------
+REPORT INDICATOR SIDAK SO - INDICATOR SHEET - JKT
+	
+select 
+    seq_no as "NO",
+    snamacabang as "CABANG",
+    srh as "RH",
+    sac as "AC",
+    ikodetoko as "KD TOKO",
+    snamatoko as "NAMA TOKO",
+    iintoleran_qty as "∑ NBH  > TOLERANSI",
+    ibalance_qty as "∑ HASIL SO BALANCE",
+    iitemselisihqty as "ITEM SELISIH SO", 
+    dshrinkagecategory as "SHRINKAGE BY KATEGORI", 
+    dplus_qty as "SELISIH SO PLUS (qty)", 
+    dminus_qty as "SELISIH SO MINUS (qty)", 
+    dac_itemselisihqty as "SELISIH ITEM SO AC", 
+    davg_latencyqty as "KETEPATAN WAKTU SETORAN", 
+    deod_latencyqty as "TERLAMBAT  EOD", 
+    inopolblakclist_qty as "NOPOL BLACKLIST", 
+    inopolrepeat as "REPEAT  NOPOL >3X", 
+    irrak_qty as "RRAK (WAKTU)",
+    idelimen_qty as "HAPUS ITEM DI I-MEN", 
+    dtotal_point as "TOTAL POINT",
+    qty_rank as "RANK", 
+    w1_dtotal_point as "TOTAL W1", 
+    w1_qty_rank as "RANK W1", 
+    w2_dtotal_point as "TOTAL W2", 
+    w2_qty_rank as "RANK W2",  
+    w3_dtotal_point as "TOTAL W3", 
+    w3_qty_rank as "RANK W3",   
+    w4_dtotal_point as "TOTAL W4", 
+    w4_qty_rank as "RANK W4"	
+from mb_rms10_rpt.smi_mv_indicator_jkt s3m
+order by seq_no;
+ ----------------------------------------------------------------------------------------
+REPORT INDICATOR SIDAK SO - OVERVIEW SHEET - JKT
+	
+select 
+    row_number() over () as "NO",
+    overview.*
+from(
+select
+    snamacabang as "CABANG",
+	srh as "RH",
+	sac as "AC",
+	ikodetoko as "KD TOKO",
+	snamatoko as "NAMA TOKO",
+	indicator_point as "Nilai Indicator",
+	mp_point as "Poin MP",
+	sm_point as "POIN Sales Monitor", 
+	total_point as "Grand Total", 
+--	gnd.total,
+	round(((total_point / gnd.total) * 100 * 100)::numeric) as "Rasio", 
+	case 		
+		when round(((total_point / gnd.total) * 100 * 100)::numeric) < 75 then 'Low Risk' -- Rasio yang < 75%
+		when round(((total_point / gnd.total) * 100 * 100)::numeric) >= 75 and round(((total_point / gnd.total) * 100 * 100)::numeric) < 90 then 'Medium' -- Rasio yang >= 75% and <90
+		when round(((total_point / gnd.total) * 100 * 100)::numeric) >= 90 then 'High Risk' -- =Rasio yang diatas 90%
+	end "Notif"
+    from
+    (select 
+            ov.seq_no,
+            ov.snamacabang,
+            ov.srh,
+            ov.sac,
+            ov.ikodetoko,
+            ov.snamatoko,
+            ov.indicator_point,
+            ov.mp_point,
+            ov.sm_point, 
+            ov.total_point,	
+            'a' dummy
+    from mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt ov)overview_sheet
+    inner join (
+            select 'a' dummy, sum(total_point) total from mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt
+    ) gnd on gnd.dummy = overview_sheet.dummy order by total_point desc
+)overview;
  ----------------------------------------------------------------------------------------
  ----------------------------------------------------------------------------------------
  ----------------------------------------------------------------------------------------
  ----------------------------------------------------------------------------------------
  ----------------------------------------------------------------------------------------
- ---------------------------------------------------------------------------------------- ----------------------------------------------------------------------------------------
  ----------------------------------------------------------------------------------------
