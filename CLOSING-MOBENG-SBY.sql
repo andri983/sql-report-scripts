@@ -90,7 +90,7 @@ Declare @date1 date = '2025-06-01'		-- diganti berdasarkan tanggal awal bulan pe
 Declare @date2 date = '2025-06-30'		-- diganti berdasarkan tanggal akhir bulan penarikan data
 Declare @iddc  int    = 2				-- diganti berdasarkan iddc data yang ditarik
 Declare @kodestatustoko varchar='R'		-- diganti berdasarkan kodestatustoko data yang ditarik
-Select * from MB_InvMove_BDPTokoKeDC_Detail_view_v5_fc(@date1,@date2,@iddc,@kodestatustoko) 
+Select * from MB_InvMove_BDPTokoKeDC_Detail_view_v5_fc(@date1,@date2,@iddc,@kodestatustoko)
 
 
 /******************************************************************************************/

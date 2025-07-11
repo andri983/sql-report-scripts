@@ -14,7 +14,7 @@
 
 	---Start Query Header Voucher
 --	insert into [SMI_DB_Reporting_Bali].dbo.SMI_Data_Penggunaan_Voucher
-	select a.kodetoko,namaToko,tglBayar,a.nomorTransaksi,g.NoPolisi,namaMember,NoTelp,namaJenisMember,c.NomorSeriVoucher as kodeVoucher,c.nominalVoucher,i.namaPendek,i.qty,i.subTotal,totalQty,totalRpPenjualan 
+	select e.idcabang,a.kodetoko,namaToko,tglBayar,a.nomorTransaksi,g.NoPolisi,namaMember,NoTelp,namaJenisMember,c.NomorSeriVoucher as kodeVoucher,c.nominalVoucher,i.kodeProduk,i.namaPendek,i.qty,i.subTotal--,totalQty,totalRpPenjualan 
 	from PB_DC.dbo.transaksitokoHeader a
 			join PB_DC.dbo.TransaksiTokoPembayaranPerCaraBayarNonTunaiVoucher c on c.kodetoko=a.kodetoko and c.nomorTransaksi=a.nomorTransaksi
 					join PB_DC.dbo.mstToko f on f.kodetoko=a.kodetoko and f.kodetoko=c.kodetoko
@@ -34,7 +34,7 @@
 	and i.statusproduk<>'K'
 	and a.kodetoko=3051002 and a.nomorTransaksi=202506120008
 	union all
-	select a.kodetoko,namaToko,tglBayar,a.nomorTransaksi,g.NoPolisi,namaMember,NoTelp,namaJenisMember,c.NomorSeriVoucher as kodeVoucher,c.nominalVoucher,i.namaPendek,i.qty,i.subTotal,totalQty,totalRpPenjualan 
+	select e.idcabang,a.kodetoko,namaToko,tglBayar,a.nomorTransaksi,g.NoPolisi,namaMember,NoTelp,namaJenisMember,c.NomorSeriVoucher as kodeVoucher,c.nominalVoucher,i.kodeProduk,i.namaPendek,i.qty,i.subTotal--,totalQty,totalRpPenjualan 
 	from PB_DC.dbo.transaksitokoHeader a
 			join PB_DC.dbo.TransaksiTokoPembayaranPerCaraBayarNonTunaiVoucher c on c.kodetoko=a.kodetoko and c.nomorTransaksi=a.nomorTransaksi
 					join PB_DC.dbo.mstToko f on f.kodetoko=a.kodetoko and f.kodetoko=c.kodetoko
