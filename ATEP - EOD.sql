@@ -1,33 +1,40 @@
-use PB_DC
-GO
+--use PB_DC
+--GO
 
 ---All data
-declare @date1 date='2025-08-01'
+declare @date1 date=getdate()-1
 declare @date2 date=CONVERT(date,dateadd(day,-1,@date1))
 
 --select a.kodeToko,date_1,date_2,case when date_1<date_2 then convert(decimal(18,2),(date_1/date_2)*100) when date_1>=date_2 then 100 end as Persentase from
 
 select 
-a.kodeToko [Kode Toko]
+GETDATE() insertdate
+,CAST(DATEADD(DAY, -1, GETDATE()) AS DATE) tglbisnis
+,e.idcabang
+,a.kodeToko [Kode Toko]
 ,a.namaToko [Nama Toko]
 ,regional
 ,area
 --,b.tglBisnis [Tgl. Sales]
 ,case when f.totalHeader=f.totalDetail and f.totaldetail=f.totalRekapHeader then 'Ok' else 'Not Ok' end as [Status Sales]
-,tglEod [Tgl. EOD],tglUpload [Tgl. Upload EOD]
+,tglEod [Tgl. EOD]
+,tglUpload [Tgl. Upload EOD]
 ,case when date_1<date_2 then concat(convert(decimal(18),(date_1/date_2)*100),' %') when date_1>=date_2 then '100 %' end as [Persentase upload Stok]
 ,max_upload [Jam Upload Terakhir] 
 				
-from MstToko a 
+from PB_DC.dbo.MstToko a 
 	left join	
-		(select kodetoko,tglbisnis,tglEod,tglUpload from tbltglbisnis where tglbisnis=@date1) b on b.kodeToko=a.kodeToko
+		(select kodetoko,tglbisnis,tglEod,tglUpload from PB_DC.dbo.tbltglbisnis where tglbisnis=@date1) b on b.kodeToko=a.kodeToko
 	left join
-		(select kodetoko,convert(decimal(18,2),count(*)) as date_2 from SaldoStokProdukToko where tglSaldo=@date2
+		(select kodetoko,convert(decimal(18,2),count(*)) as date_2 from PB_DC.dbo.SaldoStokProdukToko where tglSaldo=@date2
 		group by kodetoko) c on c.kodeToko=a.kodeToko 
 	left join
-		(select kodetoko,convert(decimal(18,2),count(*)) as date_1,max(tglUpload) max_upload from SaldoStokProdukToko where tglSaldo=@date1
-		group by kodetoko) d on d.kodeToko=a.kodeToko
-	left join MasterToolsToko e on e.kodetoko=a.kodetoko
+		(
+			select kodetoko,convert(decimal(18,2),count(*)) as date_1,max(tglUpload) max_upload 
+			from PB_DC.dbo.SaldoStokProdukToko where tglSaldo=@date1
+			group by kodetoko
+		) d on d.kodeToko=a.kodeToko
+	left join PB_DC.dbo.MasterToolsToko e on e.kodetoko=a.kodetoko
 	left join 
 		(select 
 			a.kodetoko,
@@ -55,6 +62,31 @@ from MstToko a
 						from PB_DC.dbo.RekapTransaksiTokoHeader with (nolock) 
 						where tglpembukuanTransaksi=@date1
 					) c on c.KodeToko=a.kodeToko and c.TglPembukuanTransaksi=a.tglBisnis) f on f.kodetoko=a.kodetoko
-		left join PB_DC.dbo.v_smi_pivot_area_toko g on g.kodetoko=a.kodetoko --area & RH
-	where a.statusData=1 and tglBuka<=convert(date,getdate()) and idcabang=6 --and a.kodetoko=3021004
+		left join PB_DC.dbo.v_smi_pivot_area_toko g on g.kodetoko=a.kodetoko
+	where a.statusData=1 and tglBuka<=convert(date,getdate()) and idcabang=6
 order by a.kodetoko,[Persentase upload Stok]
+;
+
+
+
+
+-- public.smi_monitoring_eod_toko definition
+
+-- Drop table
+
+-- DROP TABLE public.smi_monitoring_eod_toko;
+
+CREATE TABLE public.smi_monitoring_eod_toko (
+	insertdate timestamptz DEFAULT now() NOT NULL,
+	tglbisnis date NULL,
+	kodetoko int8 NULL,
+	namatoko varchar(100) NULL,
+	regional varchar(30) NULL,
+	area varchar(30) NULL,
+	statussales varchar(6) NULL,
+	tgleod timestamp NULL,
+	tgluploadeod timestamp NULL,
+	persentaseuploadstok varchar(43) NULL,
+	jamuploadterakhir timestamp NULL,
+	CONSTRAINT smi_monitoring_eod_toko_unique UNIQUE (tglbisnis, kodetoko)
+);

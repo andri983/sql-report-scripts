@@ -4,11 +4,11 @@
 -- Query Summary Inv Movement BDP DC ke DC --
 --use MB_DC;        -- utk jalan di server JKT
 --use MB_DC_SBY;    -- utk jalan di server SBY
-Declare @date1		date	='2025-06-01'   -- periode awal data
-Declare @date2		date    ='2025-06-30'   -- periode akhir data
+Declare @date1		date	='2025-07-01'   -- periode awal data
+Declare @date2		date    ='2025-07-31'   -- periode akhir data
 Declare @iddc		int     =1				-- isi sesuai iddc data yg akan ditarik
 Declare @tahun		int     =2025
-Declare @bulan		int     =6
+Declare @bulan		int     =7
 Select * from MB_InvMove_BDPDCkeDC_Summary_view_v5_fc(@date1,@date2,@iddc,@tahun,@bulan)
 order by coa Asc;
 
@@ -16,7 +16,7 @@ order by coa Asc;
 --use MB_DC;        -- utk jalan di server JKT
 --use MB_DC_SBY;    -- utk jalan di server SBY
 Declare @tahun		int=2025	-- tahun penarikan Data
-Declare @bulan		int=6	    -- bulan penarikan Data
+Declare @bulan		int=7	    -- bulan penarikan Data
 Declare @iddc		int=1		-- iddc disesuaikan dgn iddc data yang ditarik
 select * from MB_InvMove_BDPDCkeDC_Detail_view_v5_fc (@tahun,@bulan,@iddc) order by idproduk asc; 
 
@@ -39,7 +39,7 @@ sum(SAK_Value) as SAK_Value
 from MB_InvMove_BDPDCkeToko_Detail_non_kons
 Where
 tahun=2025				-- input sesuai tahun perikan data
-and bulan=6				-- input sesuai Bulan perikan data
+and bulan=7				-- input sesuai Bulan perikan data
 and kodestatustoko='R'  -- diganti berdasarkan kodestatustoko yg akan ditarik datanya.
 and iddc=1				-- diganti berdasarkan iddc yg akan ditarik datanya.
 group by tahun,bulan,iddc,COA
@@ -61,7 +61,7 @@ sum(SAK_Value) as SAK_Value
 from MB_InvMove_BDPDCkeToko_Detail_non_kons
 Where
 tahun=2025					-- input sesuai tahun perikan data
-and bulan=6					-- input sesuai Bulan perikan data
+and bulan=7					-- input sesuai Bulan perikan data
 and kodestatustoko='R'		-- diganti berdasarkan kodestatustoko yg akan ditarik datanya.
 and iddc=1					-- diganti berdasarkan iddc yg akan ditarik datanya.
 Group by
@@ -75,9 +75,9 @@ order by tahun asc, bulan asc, COA asc;
 -- Query Summary Inv Movement BDP Toko ke DC --
 --use MB_DC;
 --use MB_DC_SBY;
-Declare @date1 date = '2025-06-01'
-Declare @date2 date = '2025-06-30'
-Declare @iddc  int  = 2
+Declare @date1 date = '2025-07-01'
+Declare @date2 date = '2025-07-31'
+Declare @iddc  int  = 1
 Declare @kodestatustoko varchar='R'
 select * from MB_InvMove_BDPTokoKeDC_Summary_view_v5_fc(@date1,@date2,@iddc,@kodestatustoko)
 Order by COA asc;
@@ -86,8 +86,8 @@ Order by COA asc;
 -- Query Detail Inv Movement BDP Toko ke DC --
 --use MB_DC;
 --use MB_DC_SBY;
-Declare @date1 date = '2025-06-01'		-- diganti berdasarkan tanggal awal bulan penarikan data
-Declare @date2 date = '2025-06-30'		-- diganti berdasarkan tanggal akhir bulan penarikan data
+Declare @date1 date = '2025-07-01'		-- diganti berdasarkan tanggal awal bulan penarikan data
+Declare @date2 date = '2025-07-31'		-- diganti berdasarkan tanggal akhir bulan penarikan data
 Declare @iddc  int    = 1				-- diganti berdasarkan iddc data yang ditarik
 Declare @kodestatustoko varchar='R'		-- diganti berdasarkan kodestatustoko data yang ditarik
 Select * from MB_InvMove_BDPTokoKeDC_Detail_view_v5_fc(@date1,@date2,@iddc,@kodestatustoko) 
@@ -100,10 +100,10 @@ Select * from MB_InvMove_BDPTokoKeDC_Detail_view_v5_fc(@date1,@date2,@iddc,@kode
 
 --USE [MB_DC_SBY]
 --USE MB_DC
-Declare @date1 date ='2025-06-01'			-- diganti berdasarkan tanggal awal bulan penarikan data
-Declare @date2 date ='2025-06-30'			-- diganti berdasarkan tanggal akhir bulan penarikan data
+Declare @date1 date ='2025-07-01'			-- diganti berdasarkan tanggal awal bulan penarikan data
+Declare @date2 date ='2025-07-31'			-- diganti berdasarkan tanggal akhir bulan penarikan data
 Declare @kodestatustoko varchar='R'			-- diganti berdasarkan kodestatustoko data yang diingikan
-Declare @idcabang int=3						-- diganti berdasarkan idcabang data yang diingikan
+Declare @idcabang int=2						-- diganti berdasarkan idcabang data yang diingikan
 
 Select * From dbo.MB_InvMove_Toko_Summary_view_v5_fc(@date1,@date2,@kodestatustoko,@idcabang)
 order by COA Asc;
@@ -113,10 +113,10 @@ order by COA Asc;
 
 --USE [MB_DC_SBY]
 --USE MB_DC
-Declare @date1 date ='2025-06-01'			-- diganti berdasarkan tanggal awal bulan penarikan data
-Declare @date2 date ='2025-06-30'			-- diganti berdasarkan tanggal akhir bulan penarikan data
+Declare @date1 date ='2025-07-01'			-- diganti berdasarkan tanggal awal bulan penarikan data
+Declare @date2 date ='2025-07-31'			-- diganti berdasarkan tanggal akhir bulan penarikan data
 Declare @kodestatustoko varchar='R'			-- diganti berdasarkan kodestatustoko data yang diingikan
-Declare @idcabang int=3						-- diganti berdasarkan idcabang data yang diingikan
+Declare @idcabang int=2						-- diganti berdasarkan idcabang data yang diingikan
 
 Select  * From dbo.MB_InvMove_Toko_Detail_view_v5_fc(@date1,@date2,@kodestatustoko,@idcabang)
 order by kodetoko asc,COA asc,kodeproduk asc; 
@@ -125,17 +125,17 @@ order by kodetoko asc,COA asc,kodeproduk asc;
 /**************************************************************************************************/
 --GOOD, BOOK, BAD STOCK
 /**************************************************************************************************/
-Declare @date1 date	='2025-06-01'	-- diisi berdasarkan periode awal penarikan data
-Declare @date2 date	='2025-06-30'	-- diisi berdasarkan periode Akhir penarikan data
+Declare @date1 date	='2025-07-01'	-- diisi berdasarkan periode awal penarikan data
+Declare @date2 date	='2025-07-31'	-- diisi berdasarkan periode Akhir penarikan data
 Declare @iddc int	= 1				-- diisi berdasrakan iddc data yg akan ditarik
-Declare @idjenisstok int	= 1		-- diisi berdasrakan idJenisStok (Jenis Gudang) data yg akan ditarik
+Declare @idjenisstok int	= 3		-- diisi berdasrakan idJenisStok (Jenis Gudang) data yg akan ditarik
 EXEC sp_SMI_SOH_DC_byformula_per_jenisstok_view_v5 @date1,@date2,@iddc,@idjenisstok;
 
 /**************************************************************************************************/
 --GOOD STOCK TOKO REGULER 
 /**************************************************************************************************/
-DECLARE @date1 date='2025-06-01'
-DECLARE @date2 date='2025-06-30'
+DECLARE @date1 date='2025-07-01'
+DECLARE @date2 date='2025-07-31'
 DECLARE @idcabang int=2
 DECLARE @kodestatustoko varchar='R'
 select 

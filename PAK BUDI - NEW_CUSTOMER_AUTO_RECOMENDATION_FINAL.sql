@@ -671,7 +671,7 @@ select * from public.car_his where qty<0;
 select * from public.car_his where tglreport=current_date and nopolisi='L6370AAK';
 select distinct namacabang from public.car_his where tglreport=current_date;
 select nopolisi,count(*) from public.car_his where tglreport=current_date group by nopolisi HAVING COUNT(*) > 1;
-select * from public.car_voucher order by idvoucher;--OK
+select * from public.car_voucher where nomorserivoucher in ('6222BRD9W7VR','62226887T5MM') order by idvoucher;--OK
 select * from public.car_voucher where statuskirim=1;--OK
 select * from public.car_base_nopol order by insertdate desc;--OK
 select distinct namacabang from public.car_base_nopol;--

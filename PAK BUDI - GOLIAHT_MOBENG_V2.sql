@@ -51,9 +51,8 @@ AND NOT EXISTS (
     WHERE c.nomorserivoucher = s.nomorserivoucher
 );
 
---select * from public.mb_goliaht_voucher;
+--select * from public.mb_goliaht_voucher where statuskirim=1;
 
---truncate table public.mb_goliaht_voucher;
 
 
 

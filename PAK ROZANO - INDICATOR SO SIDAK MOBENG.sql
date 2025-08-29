@@ -10,6 +10,36 @@
  refresh materialized view concurrently smi_12up.smi_mv_mst_karyawan_toko;---tidak ada
  refresh materialized view concurrently smi_12up.smi_mv_mst_hc_pib;---tidak ada
  refresh materialized view concurrently mb_rms01_mbho.smi_mv_manpower;--OK
+ 
+ select * from smi_12up.smi_mv_mst_hc_pib;
+ 
+ CREATE MATERIALIZED VIEW mb_rms01_mbho.mb_mv_manpower
+TABLESPACE pg_default
+AS  
+SELECT 
+		distinct	
+		c.idcabang,
+		a.empid as nik,
+		a.name,
+		b.kodetoko,
+		CASE
+            WHEN a.job::text = 'LED1'::text THEN 'Leader'::text
+            WHEN a.job::text = 'ACTLEAD'::text THEN 'Leader'::text
+            WHEN a.job::text = 'ASLD'::text THEN 'Ass. Leader'::text
+            WHEN a.job::text = 'ACTASL'::text THEN 'Ass. Leader'::text
+            WHEN a.job::text = 'MKMB'::text THEN 'Mekanik'::text
+            ELSE NULL::text
+        END AS posisi,
+		a.subarea_begin
+		from smi_protrac.smi_stguser_pib as a
+		join mb_rms01_mbho.mv_msttoko as b on b.kodetoko::varchar=a.subarea::varchar
+		JOIN mb_rms01_mbho.mv_mastertoolstoko c ON c.kodetoko = b.kodetoko
+		where a.job in ('ACTASL','ACTLEAD','ASLD','LEAD','LED1','LED2','MKMB')
+		and (a.termination=' ' or a.termination is null)
+WITH DATA;
+
+-- View indexes:
+CREATE UNIQUE INDEX mb_mv_manpower_nik_unique_idx ON mb_rms01_mbho.mb_mv_manpower USING btree (nik, kodetoko);
   ----------------------------------------------------------------------------------------
   ----------------------------------------------------------------------------------------
  -- 1.iso_shrinkage_bycategory_jkt
@@ -18,6 +48,12 @@
  refresh materialized view concurrently smi_rms10_rpt.smi_mv_shrinkage_bycategory_jkt_w2;
  refresh materialized view concurrently smi_rms10_rpt.smi_mv_shrinkage_bycategory_jkt_w3;
  refresh materialized view concurrently smi_rms10_rpt.smi_mv_shrinkage_bycategory_jkt_w4;
+ 
+ refresh materialized view concurrently mb_rms10_rpt.smi_mv_shrinkage_bycategory_jkt;
+ refresh materialized view concurrently mb_rms10_rpt.smi_mv_shrinkage_bycategory_jkt_w1;
+ refresh materialized view concurrently mb_rms10_rpt.smi_mv_shrinkage_bycategory_jkt_w2;
+ refresh materialized view concurrently mb_rms10_rpt.smi_mv_shrinkage_bycategory_jkt_w3;
+ refresh materialized view concurrently mb_rms10_rpt.smi_mv_shrinkage_bycategory_jkt_w4;
   ----------------------------------------------------------------------------------------
   ----------------------------------------------------------------------------------------
  
@@ -597,6 +633,8 @@ CREATE UNIQUE INDEX smi_mv_shrinkage_bycategory_sby_w4_kdtoko_unique_idx ON mb_r
  ----------------------------------------------------------------------------------------
 -- 8.iso_manpower_history_temp
  refresh materialized view concurrently smi_rms01_rpt.smi_mv_manpower_history_temp;
+ 
+ select * from smi_rms01_rpt.smi_mv_manpower_history_temp;
  ----------------------------------------------------------------------------------------
  ----------------------------------------------------------------------------------------
  
@@ -2955,7 +2993,7 @@ CREATE UNIQUE INDEX mv_indicatorsosidak_salesmonitor_rpt_kodetoko_unique_idx ON 
 -- 17.iso_smimstplatblacklist
 refresh materialized view concurrently smi_rms01_pbho.mv_smimstplatblacklist;
 
-refresh materialized view concurrently select * from mb_rms01_mbho.mv_smimstplatblacklist;--OK
+refresh materialized view concurrently mb_rms01_mbho.mv_smimstplatblacklist;--OK
  ----------------------------------------------------------------------------------------
  ----------------------------------------------------------------------------------------
 -- 18.iso_TblTglBisnis
@@ -3623,7 +3661,7 @@ CREATE UNIQUE INDEX smi_mv_indicator_jkt_ikodetoko_unique_idx ON mb_rms10_rpt.sm
  ----------------------------------------------------------------------------------------
 -- select * from mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt source
 -- mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt source
-
+	
 CREATE MATERIALIZED VIEW mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt
 TABLESPACE pg_default
 AS SELECT ind.seq_no,
@@ -4333,7 +4371,7 @@ AS SELECT ind.seq_no,
     sm.point AS sm_point,
     COALESCE(ind.dtotal_point, 0::double precision) + COALESCE(mp.point, 0)::double precision + COALESCE(sm.point, 0::double precision) AS total_point
    FROM mb_rms20_rpt.smi_mv_indicator_sby ind
-     JOIN mb_rms01_mbho.smi_mv_manpower_history_temp mp ON mp.kodetoko = ind.ikodetoko
+     JOIN mb_rms01_mbho.mb_mv_manpower_history_temp mp ON mp.kodetoko = ind.ikodetoko
      JOIN mb_rms01_mbho.mv_mastertoolstoko tk ON tk.kodetoko = mp.kodetoko
      JOIN mb_rms01_mbho.mv_indicatorsosidak_salesmonitor_rpt sm ON sm.kodetoko = ind.ikodetoko::numeric
   WHERE tk.idcabang = 3
@@ -4392,51 +4430,74 @@ CREATE UNIQUE INDEX mv_transaksitokoheader_3months_temp_kodetoko_idx ON mb_rms20
 CREATE UNIQUE INDEX mv_transaksitokoheader_3months_temp_kodetoko_unique_idx ON mb_rms20_mbdc.mv_transaksitokoheader_3months_temp USING btree (kodetoko, nomortransaksi);
 CREATE INDEX mv_transaksitokoheader_3months_temp_tglbisnis_idx ON mb_rms20_mbdc.mv_transaksitokoheader_3months_temp USING btree (tglbisnis);
  ----------------------------------------------------------------------------------------
- ----------------------------------------------------------------------------------------
-REPORT INDICATOR SIDAK SO - OVERVIEW SHEET - JKT
 
+
+ ----------------------------------------------------------------------------------------
+REPORT INDICATOR SIDAK SO MOBENG - SALES MONITOR SHEET - JKT
+ ----------------------------------------------------------------------------------------
+	
 select 
-    row_number() over () as "NO",
-    overview.*
-from(
-select
-    snamacabang as "CABANG",
-	srh as "RH",
-	sac as "AC",
-	ikodetoko as "KD TOKO",
-	snamatoko as "NAMA TOKO",
-	indicator_point as "Nilai Indicator",
-	mp_point as "Poin MP",
-	sm_point as "POIN Sales Monitor", 
-	total_point as "Grand Total", 
---	gnd.total,
-	round(((total_point / gnd.total) * 100 * 100)::numeric) as "Rasio", 
-	case 		
-		when round(((total_point / gnd.total) * 100 * 100)::numeric) < 75 then 'Low Risk' -- Rasio yang < 75%
-		when round(((total_point / gnd.total) * 100 * 100)::numeric) >= 75 and round(((total_point / gnd.total) * 100 * 100)::numeric) < 90 then 'Medium' -- Rasio yang >= 75% and <90
-		when round(((total_point / gnd.total) * 100 * 100)::numeric) >= 90 then 'High Risk' -- =Rasio yang diatas 90%
-	end "Notif"
-    from
-    (select 
-            ov.seq_no,
-            ov.snamacabang,
-            ov.srh,
-            ov.sac,
-            ov.ikodetoko,
-            ov.snamatoko,
-            ov.indicator_point,
-            ov.mp_point,
-            ov.sm_point, 
-            ov.total_point,	
-            'a' dummy
-    from mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt ov)overview_sheet
-    inner join (
-            select 'a' dummy, sum(total_point) total from mb_rms10_rpt.mv_indicatorsosidak_overview_jkt_rpt
-    ) gnd on gnd.dummy = overview_sheet.dummy order by total_point desc
-)overview;
- ----------------------------------------------------------------------------------------
-REPORT INDICATOR SIDAK SO - MP HISTORY SHEET - JKT
+row_number() over () as "NO",
+	sm.namacabang as"CABANG",
+	sm.kodetoko as "KD TOKO",
+	sm.namatoko as "NAMA TOKO",	
+	sm.dsi_store_min3 as "DSI STORE M-3",
+	sm.spd_value_store_min3 as "SPD VALUE STORE M-3",
+	sm.trend_salesly_store_min3 as "% Trend Sales LY STORE M-3",	
+	sm.growth_value_store_min3 as "% Growth Value STORE M-3",
+	sm.dsi_store_min2 as "DSI STORE M-2",
+	sm.spd_value_store_min2 as "SPD VALUE STORE M-2",
+	sm.trend_salesly_store_min2 "% Trend Sales LY STORE M-2",	
+	sm.growth_value_store_min2 as "% Growth Value STORE M-2",
+	sm.dsi_store_min1 as "DSI STORE M-1",
+	sm.spd_value_store_min1 as "SPD VALUE STORE M-1",
+	sm.trend_salesly_store_min1 as "% Trend Sales LY STORE M-1",	
+	sm.growth_value_store_min1 as "% Growth Value STORE M-1",		
+	
+	sm.dsi_fastmoving_min3 as "DSI FAST MOVING M-3",
+	sm.spd_qty_fastmoving_min3 as "SPD QTY FAST MOVING M-3",
+	sm.growth_qty_fastmoving_min3 as "% Growth Qty FAST MOVING M-3",	
+	sm.growth_qtyly_fastmoving_min3 as "% Growth Qty LY FAST MOVING M-3",
+    sm.spd_value_fastmoving_min3 as "SPD VALUE FAST MOVING M-3",
+    sm.growth_value_fastmoving_min3 as "% Growth Value FAST MOVING M-3",
+	
+	sm.dsi_fastmoving_min2 as "DSI FAST MOVING M-2",
+	sm.spd_qty_fastmoving_min2 as "SPD QTY FAST MOVING M-2",
+	sm.growth_qty_fastmoving_min2 as "% Growth Qty FAST MOVING M-2",	
+	sm.growth_qtyly_fastmoving_min2 as "% Growth Qty LY FAST MOVING M-2",
+    sm.spd_value_fastmoving_min2 as "SPD VALUE FAST MOVING M-2",
+    sm.growth_value_fastmoving_min2 as "% Growth Value FAST MOVING M-2",
+	
+	sm.dsi_fastmoving_min1 as "DSI FAST MOVING M-1",
+	sm.spd_qty_fastmoving_min1 as "SPD QTY FAST MOVING M-1",
+	sm.growth_qty_fastmoving_min1 as "% Growth Qty FAST MOVING M-1",	
+	sm.growth_qtyly_fastmoving_min1 as "% Growth Qty LY FAST MOVING M-1",
+    sm.spd_value_fastmoving_min1 as "SPD VALUE FAST MOVING M-1",
+    sm.growth_value_fastmoving_min1 as "% Growth Value FAST MOVING M-1",
+	
+	sm.spd_itemmonitor_min3 as "SPD ITEM MONITOR M-3",
+	sm.dsi_itemmonitor_min3 as "DSI ITEM MONITOR M-3",
+	sm.trend_spdly_itemmonitor_min3 as "% TREND SPD LY ITEM MONITOR M-3",
+	sm.growth_itemmonitor_min1 as "% Growth Bulan Ini ITEM MONITOR M-3",
+	
+	sm.spd_itemmonitor_min2 as "SPD ITEM MONITOR M-2",
+	sm.dsi_itemmonitor_min2 as "DSI ITEM MONITOR M-2",
+	sm.trend_spdly_itemmonitor_min2 as "% TREND SPD LY ITEM MONITOR M-2",
+	sm.growth_itemmonitor_min2 as "% Growth Bulan Ini ITEM MONITOR M-2",
+	
+	sm.spd_itemmonitor_min1 as "SPD ITEM MONITOR M-1",
+	sm.trend_spdly_itemmonitor_min1 as "DSI ITEM MONITOR M-1",
+	sm.trend_spdly_itemmonitor_min1 as "% TREND SPD LY ITEM MONITOR M-1",
+	sm.growth_itemmonitor_min1 as "% Growth Bulan Ini ITEM MONITOR M-1",
+	sm.point as "POINT"
+from mb_rms01_mbho.mv_indicatorsosidak_salesmonitor_rpt sm 
+inner join mb_rms01_mbho.mv_mastertoolstoko tk on tk.kodetoko = sm.kodetoko 
+where tk.idcabang = 2 -- JKT
+and (coalesce(sm.dsi_store_min3, 0) + coalesce(sm.dsi_store_min2, 0) + coalesce(sm.dsi_store_min1, 0)) > 0
 
+----------------------------------------------------------------------------------------
+REPORT INDICATOR SIDAK SO MOBENG - MP HISTORY SHEET - JKT
+ ----------------------------------------------------------------------------------------
 select 
 	row_number() over () as "NO", 
 	mp.nik as "NIK",
@@ -4457,9 +4518,10 @@ select
 from mb_rms01_mbho.smi_mv_manpower_history_temp mp
 inner join mb_rms01_mbho.mv_mastertoolstoko tk on tk.kodetoko = mp.kodetoko 
 where tk.idcabang = 2 -- JKT
+
  ----------------------------------------------------------------------------------------
-REPORT INDICATOR SIDAK SO - INDICATOR SHEET - JKT
-	
+REPORT INDICATOR SIDAK SO MOBENG - INDICATOR SHEET - JKT
+ ----------------------------------------------------------------------------------------
 select 
     seq_no as "NO",
     snamacabang as "CABANG",
@@ -4492,9 +4554,10 @@ select
     w4_qty_rank as "RANK W4"	
 from mb_rms10_rpt.smi_mv_indicator_jkt s3m
 order by seq_no;
+
  ----------------------------------------------------------------------------------------
-REPORT INDICATOR SIDAK SO - OVERVIEW SHEET - JKT
-	
+REPORT INDICATOR SIDAK SO MOBENG - OVERVIEW SHEET - JKT
+ ----------------------------------------------------------------------------------------
 select 
     row_number() over () as "NO",
     overview.*
