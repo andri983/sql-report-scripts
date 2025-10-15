@@ -101,7 +101,48 @@ CREATE TABLE public.car_his (
 CREATE INDEX idx_car_his_tgltransaksi ON public.car_his USING btree (tgltransaksi);
 CREATE INDEX idx_car_his_wa_xid ON public.car_his USING btree (wa_xid);
 
+-- V2 20250922
+CREATE TABLE public.car_his (
+	tgltransaksi date NULL,
+	tglreport date NULL,
+	tglakhirvoucher date NULL,
+	nomorserivoucher varchar(50) NULL,
+	namacabang varchar(40) NULL,
+	kodetoko int8 NULL,
+	nomortransaksi int8 NULL,
+	brand varchar(30) NULL,
+	category varchar(30) NULL,
+	idproduk int4 NULL,
+	kodeproduk varchar(10) NULL,
+	namapanjang varchar(100) NULL,
+	qty numeric(18, 2) NULL,
+	subtotal numeric(18, 2) NULL,
+	nopolisi varchar(10) NULL,
+	namamember varchar(30) NULL,
+	notelp varchar(15) NULL,
+	idjenismember int4 NULL,
+	namajenismember varchar(30) NULL,
+	reminder date NULL,
+	wa_status int4 DEFAULT 0 NULL,
+	wa_send_date timestamp NULL,
+	wa_xid varchar(150) NULL,
+	wa_status_data varchar(10) NULL,
+	CONSTRAINT car_his_unique UNIQUE (tgltransaksi, nomorserivoucher, kodetoko, nomortransaksi)
+);
+CREATE INDEX idx_car_his_tgltransaksi ON public.car_his USING btree (tgltransaksi);
+CREATE INDEX idx_car_his_wa_xid ON public.car_his USING btree (wa_xid);
 
+SELECT * FROM public.car_his;
+SELECT * FROM public.car_his_20250924;
+
+--INSERT INTO public.car_his
+--(tgltransaksi, tglreport, tglakhirvoucher, nomorserivoucher, namacabang, kodetoko, nomortransaksi, brand, category, idproduk, kodeproduk, namapanjang, qty, subtotal, nopolisi, namamember, notelp, idjenismember, namajenismember, wa_status, wa_send_date, wa_xid, wa_status_data)
+--SELECT
+-- tgltransaksi, tglreport, tglakhirvoucher, nomorserivoucher, namacabang, kodetoko, nomortransaksi, brand, category, idproduk, kodeproduk, namapanjang, qty, subtotal, nopolisi, namamember, notelp, idjenismember, namajenismember, wa_status, wa_send_date, wa_xid, wa_status_data
+--FROM public.car_his_20250924;
+
+--CREATE TABLE public.car_his_20250924 AS
+--SELECT * FROM public.car_his;
 
 ----4. QUERY UNTUK MENDAPATKAN TRANSAKSI BAN H-1 (TANPA OLI DAN SERVICE)
 ----   QUERY UNTUK MEMASUKAN DATA public.car_his
@@ -668,11 +709,11 @@ $function$
 
 
 select * from public.car_his where qty<0;
-select * from public.car_his where tglreport=current_date and nopolisi='L6370AAK';
+select * from public.car_his where tglreport=current_date-1 and nopolisi='L6370AAK';
 select distinct namacabang from public.car_his where tglreport=current_date;
 select nopolisi,count(*) from public.car_his where tglreport=current_date group by nopolisi HAVING COUNT(*) > 1;
 select * from public.car_voucher where nomorserivoucher in ('6222BRD9W7VR','62226887T5MM') order by idvoucher;--OK
-select * from public.car_voucher where statuskirim=1;--OK
+select * from public.car_voucher where statuskirim=0;--OK
 select * from public.car_base_nopol order by insertdate desc;--OK
 select distinct namacabang from public.car_base_nopol;--
 select * from public.car_smimstvoucherdiskonpersen;--OK
@@ -689,14 +730,26 @@ select * from public.car_voucher where nomorserivoucher='625ZKJFH2QPM';
 --truncate table public.car_smimstvoucherdiskonpersen;
 --truncate table public.car_base_nopol;
 
-create table public.car_his_backup as
-select * from public.car_his;
+----------
+select * from public.car_his where tglreport=current_date-1 and nopolisi='B4067BKA';
+update public.car_his set wa_status=0, wa_send_date=null, wa_xid=null, wa_status_data=null where tglreport=current_date and nopolisi='B4067BKA';
+----------
 
-insert into public.car_his
-select * from public.car_his_backup where nopolisi in ('DK4995DZ','N5714MR');
 
-update public.car_his set wa_status=1;
-select * from public.car_his order by car_his.nomorserivoucher;
+--select * from public.car_voucher where statuskirim=0;
+--update public.car_voucher set statuskirim=9 where statuskirim=0;
+--
+--create table public.car_voucher_backup as
+--select * from public.car_voucher
+--
+--create table public.car_his_backup as
+--select * from public.car_his;
+--
+--insert into public.car_his
+--select * from public.car_his_backup where nopolisi in ('DK4995DZ','N5714MR');
+
+--update public.car_his set wa_status=1;
+--select * from public.car_his order by car_his.nomorserivoucher;
 
 ----5.TABLE public.car_base_nopol
 ----select * from public.car_base_nopol;

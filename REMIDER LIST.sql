@@ -1,4 +1,11 @@
---Report Summary Auto Offering
+-------------------------------------------------------------------------------------------------------------------
+--Accu
+select * from public.pra_his;
+-------------------------------------------------------------------------------------------------------------------
+--Offering
+select * from public.car_his;
+
+--Summary
 select 
 x.tahun as "TAHUN", 
 x.bulan as "BULAN", 
@@ -26,8 +33,7 @@ from (
 group by x.tahun,x.bulan,x.namacabang
 order by x.tahun asc, x.bulan asc;
 
-
---Report Detail Auto Offering
+--Detail
 SELECT 
     x.tgltransaksi as "Tgl Transaksi", 
     x.tglreport as "Tgl Report", 
@@ -64,29 +70,40 @@ LEFT JOIN (
     FROM smi_sales_voucher_cab_his
 ) AS a ON x.nomorserivoucher = a.nomorserivoucher
 ORDER BY x.tgltransaksi;
+-------------------------------------------------------------------------------------------------------------------
+--Goliaht SMI
+--Summary
+select x.tahun as "TAHUN", x.bulan as "BULAN", x.namacabang as "NAMA CABANG",sum(x.wa_status) as "JUMLAH WA REMIND"  
+from (
+	select 
+	TO_CHAR(kolom_d::date, 'YYYY') AS tahun,
+	TO_CHAR(kolom_d::date, 'MM') AS bulan,
+	namacabang,sum(wa_status) as wa_status
+	from public.smi_trx_oil_goliaht_his 
+	where wa_status=1 --and kolom_d::date between '2024-10-01' and '2025-07-31' 
+	group by namacabang, kolom_d::date
+)as x
+group by x.tahun, x.bulan, x.namacabang;
 
+--Detail
+select * from public.smi_trx_oil_goliaht_his 
+where wa_status=1 and kolom_d::date between '2025-09-01' and '2025-09-30' 
+-------------------------------------------------------------------------------------------------------------------
+--Goliaht MOB
+--Summary
+select x.tahun as "TAHUN", x.bulan as "BULAN", x.namacabang as "NAMA CABANG",sum(x.wa_status) as "JUMLAH WA REMIND"  
+from (
+	select 
+	TO_CHAR(kolom_d::date, 'YYYY') AS tahun,
+	TO_CHAR(kolom_d::date, 'MM') AS bulan,
+	namacabang,sum(wa_status) as wa_status
+	from public.mb_trx_oil_goliaht_his 
+	where wa_status=1 --and kolom_d::date between '2024-10-01' and '2025-07-31' 
+	group by namacabang, kolom_d::date
+)as x
+group by x.tahun, x.bulan, x.namacabang;
 
--- public.smi_sales_voucher_cab_his definition
--- select * from public.smi_sales_voucher_cab_his;
--- select distinct namacabang from public.smi_sales_voucher_cab;
--- DROP TABLE public.smi_sales_voucher_cab_his;
-
-CREATE TABLE public.smi_sales_voucher_cab_his (
-	insertdate timestamptz DEFAULT now() NOT NULL,
-	namacabang varchar(40) NULL,
-	kodetoko numeric NULL,
-	namatoko varchar(50) NULL,
-	tglbayar timestamp NULL,
-	nomortransaksi numeric NULL,
-	nopolisi varchar(14) NULL,
-	namamember varchar(50) NULL,
-	notelp varchar(15) NULL,
-	namajenismember varchar(50) NULL,
-	namagroupvoucher varchar(50) NULL,
-	namamarchant varchar(50) NULL,
-	nomorserivoucher varchar(20) NULL,
-	kodecarabayar varchar(3) NULL,
-	nominalvoucher numeric(20, 2) NULL,
-	qty numeric(20, 2) NULL,
-	totalrppenjualan numeric(20, 2) NULL
-);
+--Detail
+select * from public.mb_trx_oil_goliaht_his 
+where wa_status=1 and kolom_d::date between '2025-10-14' and '2025-10-14' 
+-------------------------------------------------------------------------------------------------------------------
