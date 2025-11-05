@@ -1,3 +1,4 @@
+SELECT * FROM public.mb_transaksi_profile('2025-01-01', '2025-10-14');
 DROP FUNCTION public.mb_transaksi_profile(date, date);
 
 CREATE OR REPLACE FUNCTION public.mb_transaksi_profile(startdate date, enddate date)
@@ -40,7 +41,7 @@ BEGIN
         SELECT
             DISTINCT a.orderdate, a.store, a.nomortransaksi, a.nopolisi, a.filternewcustomer
         FROM mb_rms10_rpt.mb_transaksi_detail_produk_all AS a
-       WHERE a.orderdate BETWEEN startdate AND enddate
+--       WHERE a.orderdate BETWEEN startdate AND enddate
 		-- WHERE a.orderdate BETWEEN '2025-10-14' AND '2025-10-14'
 
         UNION ALL
@@ -48,7 +49,7 @@ BEGIN
         SELECT
             DISTINCT a.orderdate, a.store, a.nomortransaksi, a.nopolisi, a.filternewcustomer
         FROM mb_rms20_rpt.mb_transaksi_detail_produk_all AS a
-       WHERE a.orderdate BETWEEN startdate AND enddate
+--       WHERE a.orderdate BETWEEN startdate AND enddate
 		-- WHERE a.orderdate BETWEEN '2025-10-14' AND '2025-10-14'
     ),    
     profilekendaraan AS (

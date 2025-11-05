@@ -1,9 +1,13 @@
 -------------------------------------------------------------------------------------------------------------------
 --Accu
 select * from public.pra_his;
+select * from public.pra_his where reminder1='2025-10-22' and wa_status1=0;
+select * from public.pra_his where wa_status1=1;
 -------------------------------------------------------------------------------------------------------------------
 --Offering
 select * from public.car_his;
+select * from public.car_his where reminder='2025-10-22' and wa_status=0;
+select * from public.car_his where wa_status=1;
 
 --Summary
 select 
@@ -83,11 +87,14 @@ from (
 	where wa_status=1 --and kolom_d::date between '2024-10-01' and '2025-07-31' 
 	group by namacabang, kolom_d::date
 )as x
-group by x.tahun, x.bulan, x.namacabang;
+group by x.tahun, x.bulan, x.namacabang
+order by x.tahun, x.bulan, x.namacabang;
 
 --Detail
 select * from public.smi_trx_oil_goliaht_his 
-where wa_status=1 and kolom_d::date between '2025-09-01' and '2025-09-30' 
+select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and wa_status=0; 
+select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and kolom_ac='-30' and wa_status=0; 
+select * from public.smi_trx_oil_goliaht_his where wa_status=1;
 -------------------------------------------------------------------------------------------------------------------
 --Goliaht MOB
 --Summary
@@ -101,9 +108,11 @@ from (
 	where wa_status=1 --and kolom_d::date between '2024-10-01' and '2025-07-31' 
 	group by namacabang, kolom_d::date
 )as x
-group by x.tahun, x.bulan, x.namacabang;
+group by x.tahun, x.bulan, x.namacabang
+order by x.tahun, x.bulan, x.namacabang;
 
 --Detail
 select * from public.mb_trx_oil_goliaht_his 
-where wa_status=1 and kolom_d::date between '2025-10-14' and '2025-10-14' 
+where wa_status=1 and kolom_d::date between '2025-10-14' and '2025-10-14';
+select * from public.mb_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and wa_status=0; 
 -------------------------------------------------------------------------------------------------------------------

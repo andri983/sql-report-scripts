@@ -26,7 +26,7 @@ left join PB_DC.dbo.mstJenisMember as C with (NOLOCK) on B.IdJenisMember=C.IdJen
 left join PB_DC.dbo.MstMember as D with (NOLOCK) on D.NoPolisi=b.NoPolisi
 left join PB_DC.dbo.MstToko as E with (NOLOCK) on E.kodetoko=A.kodetoko
 WHERE E.kodestatustoko='R' 
-and A.TglBisnis between '2022-12-01' and '2022-12-31'
+and A.TglBisnis between '2025-09-01' and '2025-09-30'
 UNION ALL
 --//SALES ORDER
 SELECT 
@@ -48,7 +48,7 @@ FROM PB_DC.dbo.shipmentHeader a
 JOIN PB_DC.dbo.SMISalesOrderHeader c with (NOLOCK)on a.nomorSo=c.nomorso and a.nomorUSo=c.nomorUso and a.idDc=c.idDc
 JOIN PB_DC.dbo.SMIMstCustumerSalesorder e with (NOLOCK) on c.idCustumer=e.idCustumer
 JOIN PB_DC.dbo.MstDC f with (NOLOCK) on f.idDc=a.idDc
-WHERE convert(date,a.tglApprove) between '2022-12-01' and '2022-12-31'
+WHERE convert(date,a.tglApprove) between '2025-09-01' and '2025-09-30'
 AND a.statusData=1
 UNION ALL
 --//RETUR SALES ORDER
@@ -71,7 +71,7 @@ FROM PB_DC.dbo.SmiReturSalesOrderHeader a
 JOIN PB_DC.dbo.SMIMstCustumerSalesorder b with (NOLOCK) on a.idCustomer=b.idCustumer
 JOIN PB_DC.dbo.MstDC c with (NOLOCK) on c.idDc=a.idDc
 WHERE a.StatusReceipt=1
-AND convert(date,a.TglReceipt ) between '2022-12-01' and '2022-12-31'
+AND convert(date,a.TglReceipt ) between '2025-09-01' and '2025-09-30'
 UNION ALL
 --//TO Franchise
 SELECT
@@ -94,7 +94,7 @@ left join PB_DC.dbo.MstToko as B with (NOLOCK) on B.kodetoko=A.kodetoko
 left join PB_DC.dbo.mastertoolstoko as C with (NOLOCK) on C.kodetoko=A.kodetoko
 left join PB_DC.dbo.MstDC as D with (NOLOCK) on D.idDc=C.iddc
 WHERE A.statusdata in (1,2) 
-AND CONVERT(date,A.tglApprove) between '2022-12-01' and '2022-12-31' AND B.kodeStatusToko<>'R'
+AND CONVERT(date,A.tglApprove) between '2025-09-01' and '2025-09-30' AND B.kodeStatusToko<>'R'
 UNION ALL
 --//TO Manual Franchise
 SELECT
@@ -117,7 +117,7 @@ left join PB_DC.dbo.MstToko as B with (NOLOCK) on B.kodetoko=A.kodetoko
 left join PB_DC.dbo.mastertoolstoko as C with (NOLOCK) on C.kodetoko=A.kodetoko
 left join PB_DC.dbo.MstDC as D with (NOLOCK) on D.idDc=C.iddc
 WHERE A.statusdata in (1,2) 
-AND CONVERT(date,A.tglApprove) between '2022-12-01' and '2022-12-31' AND B.kodeStatusToko<>'R'
+AND CONVERT(date,A.tglApprove) between '2025-09-01' and '2025-09-30' AND B.kodeStatusToko<>'R'
 UNION ALL
 --//RETUR Franchise
 SELECT
@@ -139,7 +139,7 @@ FROM PB_DC.dbo.LpbDariTokoHeader as A with (NOLOCK)
 left join PB_DC.dbo.MstToko as B with (NOLOCK) on B.kodetoko=A.kodetoko
 left join PB_DC.dbo.mastertoolstoko as C with (NOLOCK) on C.kodetoko=A.kodetoko
 left join PB_DC.dbo.MstDC as D with (NOLOCK) on D.idDc=C.iddc
-WHERE CONVERT(date,A.tglLpb) between '2022-12-01' and '2022-12-31' AND B.kodeStatusToko<>'R'
+WHERE CONVERT(date,A.tglLpb) between '2025-09-01' and '2025-09-30' AND B.kodeStatusToko<>'R'
 ) as a
 Order by a.kodetokocabang, a.transactiondate, a.serialno;
 
@@ -152,4 +152,4 @@ Order by a.kodetokocabang, a.transactiondate, a.serialno;
 --select a.* FROM PB_DC.dbo.TransaksiTokoheader as A with (NOLOCK)
 --left join PB_DC.dbo.MstToko as E with (NOLOCK) on E.kodetoko=A.kodetoko
 --WHERE E.kodestatustoko='R' 
---and A.TglBisnis between '2022-12-01' and '2022-12-31'
+--and A.TglBisnis between '2025-09-01' and '2025-09-30'

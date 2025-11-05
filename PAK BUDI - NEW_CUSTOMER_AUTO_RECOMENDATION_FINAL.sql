@@ -608,6 +608,7 @@ WITH
 oli_serv_trans AS (
   SELECT DISTINCT kodetoko, nomortransaksi
   FROM smi_%I_transaksi_toko_perjenis_member_v3 x
+--	FROM smi_rms10_transaksi_toko_perjenis_member_v3 x
   WHERE tanggal = current_date - 1
     AND EXISTS (
       SELECT 1 FROM smi_mst_oli oli WHERE oli.kodeproduk = x.kodeproduk
@@ -631,6 +632,7 @@ SELECT *
 	    SELECT DISTINCT ON (a.nopolisi)
 	        *
 	    FROM smi_%I_transaksi_toko_perjenis_member_v3 a
+--		FROM smi_rms10_transaksi_toko_perjenis_member_v3 a
 	    WHERE a.iddivisi = 1
 	      AND a.tanggal = current_date - 1
 		  AND a.qty > 0
@@ -665,7 +667,7 @@ SELECT
   t.namacabang, t.kodetoko, t.nomortransaksi, t.brand, t.category,
   t.idproduk, t.kodeproduk, t.namapanjang, t.qty, t.subtotal, t.nopolisi,
   t.namamember, '62' || SUBSTRING(t.notelp FROM 2) AS notelp,
-  t.idjenismember, t.namajenismember
+  t.idjenismember, t.namajenismember,(t.tanggal + INTERVAL '7 days')::date as reminder
 FROM transaksi t
 JOIN voucher v ON t.rn = v.rn
 WHERE v.nomorserivoucher IS NOT NULL;
@@ -675,13 +677,13 @@ INSERT INTO public.car_his (
   tgltransaksi, tglreport, tglakhirvoucher, nomorserivoucher,
   namacabang, kodetoko, nomortransaksi, brand, category,
   idproduk, kodeproduk, namapanjang, qty, subtotal, nopolisi,
-  namamember, notelp, idjenismember, namajenismember
+  namamember, notelp, idjenismember, namajenismember, reminder
 )
 SELECT 
   tgltransaksi, tglreport, tglakhirvoucher, nomorserivoucher,
   namacabang, kodetoko, nomortransaksi, brand, category,
   idproduk, kodeproduk, namapanjang, qty, subtotal, nopolisi,
-  namamember, notelp, idjenismember, namajenismember
+  namamember, notelp, idjenismember, namajenismember, reminder
 FROM tmp_final_data;
 
 -- STEP 3: Insert ke car_base_nopol

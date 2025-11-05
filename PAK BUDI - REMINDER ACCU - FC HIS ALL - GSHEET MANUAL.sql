@@ -46,10 +46,11 @@ distinct
     "Starter Motor" as startermotor
 FROM public.gsheet_results
 --FROM public.pra_gsheet_results
-WHERE "Timestamp"::date between '2025-09-18' and '2025-10-08' and site_name='JAKARTA';
+WHERE "Timestamp"::date between '2025-10-01' and '2025-10-31' and site_name in ('SURABAYA','SAMARINDA');
 
---create table public.gsheet_results_20251001 as
+--create table public.gsheet_results_20251016 as
 --select * from public.gsheet_results;
+select distinct site_name from public.gsheet_results;
 
 ---------------------------------------------------------------------------------------------------------------------------
 SELECT 
