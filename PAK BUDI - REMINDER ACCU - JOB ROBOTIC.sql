@@ -75,3 +75,19 @@ Interval Unit	Days
 DML Query Jobs
 pra_his_all_rms10-insert	POOL/localhost <DATARMS>	09/02/2025 13:33:54		pra_his_all_rms10-insert	_do_jobs: canceling statement due to user request
 
+
+
+
+
+Scheduled DML Query
+Name
+pra_
+Search...
+ 
+	Execution Date	Interval Unit
+		1. pra_status_accu-delete	11/12/2025 02:00:00	Days
+		2. pra_last_trx_accu		11/12/2025 07:00:00	Days
+		3. pra_his_all_rms10-insert	11/12/2025 08:00:00	Days
+		4. pra_his-insert			11/11/2025 09:15:00	Days
+		5. pra_his-update			11/11/2025 09:30:00	Days
+

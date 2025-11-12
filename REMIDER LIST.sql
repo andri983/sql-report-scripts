@@ -1,8 +1,46 @@
+select count(*) from public.smi_goliaht_voucher where statuskirim=0;
+
+select count(*) from public.mb_goliaht_voucher where statuskirim=0;
+
+select count(*) from public.car_voucher where statuskirim=0;
+
+
+
+
+
 -------------------------------------------------------------------------------------------------------------------
 --Accu
 select * from public.pra_his;
 select * from public.pra_his where reminder1='2025-10-22' and wa_status1=0;
 select * from public.pra_his where wa_status1=1;
+
+--Summary
+select 
+x.tahun as "TAHUN", 
+x.bulan as "BULAN", 
+x.namacabang as "NAMA CABANG",
+sum(x.wa_status1) as "JUMLAH WA REMIND",
+sum(total_read) as "JUMLAH STATUS READ",
+sum(total_sent) as "JUMLAH STATUS SENT",
+sum(total_failed) as "JUMLAH STATUS FAILED",
+sum(total_delivered) as "JUMLAH STATUS DELIVERED",
+sum(total_null) as "JUMLAH STATUS KOSONG"
+from (
+	select 
+	TO_CHAR(reportdate, 'YYYY') AS tahun,
+	TO_CHAR(reportdate, 'MM') AS bulan,
+	namacabang,sum(wa_status1) as wa_status1,
+	COUNT(*) FILTER (WHERE wa_status_data1 = 'read') AS total_read,
+    COUNT(*) FILTER (WHERE wa_status_data1 = 'sent') AS total_sent,
+    COUNT(*) FILTER (WHERE wa_status_data1 = 'failed') AS total_failed,
+    COUNT(*) FILTER (WHERE wa_status_data1 = 'delivered') AS total_delivered,
+    COUNT(*) FILTER (WHERE wa_status_data1 IS NULL) AS total_null
+	from public.pra_his 
+	where wa_status1=1
+	group by namacabang, reportdate
+)as x
+group by x.tahun,x.bulan,x.namacabang
+order by x.tahun asc, x.bulan asc;
 -------------------------------------------------------------------------------------------------------------------
 --Offering
 select * from public.car_his;
@@ -91,7 +129,7 @@ group by x.tahun, x.bulan, x.namacabang
 order by x.tahun, x.bulan, x.namacabang;
 
 --Detail
-select * from public.smi_trx_oil_goliaht_his 
+select * from public.smi_trx_oil_goliaht_his where wa_status=1 and kolom_d::date between '2025-10-01' and '2025-10-31';
 select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and wa_status=0; 
 select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and kolom_ac='-30' and wa_status=0; 
 select * from public.smi_trx_oil_goliaht_his where wa_status=1;
@@ -113,6 +151,6 @@ order by x.tahun, x.bulan, x.namacabang;
 
 --Detail
 select * from public.mb_trx_oil_goliaht_his 
-where wa_status=1 and kolom_d::date between '2025-10-14' and '2025-10-14';
+where wa_status=1 and kolom_d::date between '2025-10-01' and '2025-10-31';
 select * from public.mb_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and wa_status=0; 
 -------------------------------------------------------------------------------------------------------------------
