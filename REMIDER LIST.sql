@@ -11,7 +11,7 @@ select count(*) from public.car_voucher where statuskirim=0;
 -------------------------------------------------------------------------------------------------------------------
 --Accu
 select * from public.pra_his;
-select * from public.pra_his where reminder1='2025-10-22' and wa_status1=0;
+select * from public.pra_his where reminder1='2025-11-11' and wa_status1=0;
 select * from public.pra_his where wa_status1=1;
 
 --Summary
@@ -151,6 +151,6 @@ order by x.tahun, x.bulan, x.namacabang;
 
 --Detail
 select * from public.mb_trx_oil_goliaht_his 
-where wa_status=1 and kolom_d::date between '2025-10-01' and '2025-10-31';
+where wa_status=1 and kolom_d::date between '2025-11-16' and '2025-11-16';
 select * from public.mb_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and wa_status=0; 
 -------------------------------------------------------------------------------------------------------------------
