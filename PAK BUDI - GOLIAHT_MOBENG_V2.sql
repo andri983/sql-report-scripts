@@ -72,7 +72,7 @@ AND NOT EXISTS (
 
 ------CREATE INSERT INTO (mb_rms01_mbho.smimstvoucherpersen-public.goliaht_voucher)---20250929
 
-SELECT NOW() AS insertdate,s.idvoucher,s.idgroupvoucher,s.idmarchant,s.nomorserivoucher,0 AS statuskirim
+SELECT *
 FROM mb_rms01_mbho.smimstvoucherpersen s
 WHERE s.statusdata=1 and s.idmarchant=3
 AND NOT EXISTS (
@@ -81,9 +81,9 @@ AND NOT EXISTS (
     WHERE c.nomorserivoucher = s.nomorserivoucher
 );
 
-select * from public.mb_goliaht_voucher where statuskirim=1;--1130
-select * from public.mb_goliaht_voucher where statuskirim=9;--1711--2870
-select * from public.mb_goliaht_voucher where statuskirim=0;--1159
+select * from public.mb_goliaht_voucher where statuskirim=1;--1130-------2982
+select * from public.mb_goliaht_voucher where statuskirim=9;--1711--2870-2870
+select * from public.mb_goliaht_voucher where statuskirim=0;--1159-------148
 
 --update public.mb_goliaht_voucher set statuskirim =9 where statuskirim=0;
 

@@ -1,6 +1,8 @@
 select count(*) from robotic_job where enable ='true';
 select * from robotic_job where enable ='true';
-select * from robotic_job where id in ('13598');
+select * from robotic_job where name in ('Report Stock Opname Toko Mobeng Weekly Cab. JKT','Report Stock Opname Toko Mobeng Weekly Cab. SBY');
+
+select * from robotic_job where name like '%Report_Daily_Stock_MB%'
 
 update robotic_job set enable ='false' where id in ('5334',
 '5338',

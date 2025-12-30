@@ -46,6 +46,7 @@ order by x.tahun asc, x.bulan asc;
 select * from public.car_his;
 select * from public.car_his where reminder='2025-10-22' and wa_status=0;
 select * from public.car_his where wa_status=1;
+select * from public.car_his where wa_status=1 and wa_status_data is null;
 
 --Summary
 select 
@@ -115,39 +116,95 @@ ORDER BY x.tgltransaksi;
 -------------------------------------------------------------------------------------------------------------------
 --Goliaht SMI
 --Summary
-select x.tahun as "TAHUN", x.bulan as "BULAN", x.namacabang as "NAMA CABANG",sum(x.wa_status) as "JUMLAH WA REMIND"  
+--select x.tahun as "TAHUN", x.bulan as "BULAN", x.namacabang as "NAMA CABANG",sum(x.wa_status) as "JUMLAH WA REMIND"  
+--from (
+--	select 
+--	TO_CHAR(kolom_d::date, 'YYYY') AS tahun,
+--	TO_CHAR(kolom_d::date, 'MM') AS bulan,
+--	namacabang,sum(wa_status) as wa_status
+--	from public.smi_trx_oil_goliaht_his 
+--	where wa_status=1 --and kolom_d::date between '2024-10-01' and '2025-07-31' 
+--	group by namacabang, kolom_d::date
+--)as x
+--group by x.tahun, x.bulan, x.namacabang
+--order by x.tahun, x.bulan, x.namacabang;
+select 
+x.tahun as "TAHUN", 
+x.bulan as "BULAN", 
+x.namacabang as "NAMA CABANG",
+sum(x.wa_status) as "JUMLAH WA REMIND",
+sum(total_read) as "JUMLAH STATUS READ",
+sum(total_sent) as "JUMLAH STATUS SENT",
+sum(total_failed) as "JUMLAH STATUS FAILED",
+sum(total_delivered) as "JUMLAH STATUS DELIVERED",
+sum(total_null) as "JUMLAH STATUS KOSONG"
 from (
 	select 
-	TO_CHAR(kolom_d::date, 'YYYY') AS tahun,
-	TO_CHAR(kolom_d::date, 'MM') AS bulan,
-	namacabang,sum(wa_status) as wa_status
+	TO_CHAR(kolom_d, 'YYYY') AS tahun,
+	TO_CHAR(kolom_d, 'MM') AS bulan,
+	namacabang,sum(wa_status) as wa_status,
+	COUNT(*) FILTER (WHERE wa_status_data = 'read') AS total_read,
+    COUNT(*) FILTER (WHERE wa_status_data = 'sent') AS total_sent,
+    COUNT(*) FILTER (WHERE wa_status_data = 'failed') AS total_failed,
+    COUNT(*) FILTER (WHERE wa_status_data = 'delivered') AS total_delivered,
+    COUNT(*) FILTER (WHERE wa_status_data IS NULL) AS total_null
 	from public.smi_trx_oil_goliaht_his 
-	where wa_status=1 --and kolom_d::date between '2024-10-01' and '2025-07-31' 
-	group by namacabang, kolom_d::date
+	where wa_status=1
+	group by namacabang, kolom_d
 )as x
-group by x.tahun, x.bulan, x.namacabang
-order by x.tahun, x.bulan, x.namacabang;
+group by x.tahun,x.bulan,x.namacabang
+order by x.tahun asc, x.bulan asc;
 
 --Detail
 select * from public.smi_trx_oil_goliaht_his where wa_status=1 and kolom_d::date between '2025-10-01' and '2025-10-31';
 select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and wa_status=0; 
 select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and kolom_ac='-30' and wa_status=0; 
 select * from public.smi_trx_oil_goliaht_his where wa_status=1;
+select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-15' and kolom_ac='0' and namacabang='Jakarta Baru';
+select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-11' and wa_status=0 and kolom_ac='0';
+select distinct namacabang from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-21' and kolom_ac='0';
+select distinct namacabang from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-22';
 -------------------------------------------------------------------------------------------------------------------
 --Goliaht MOB
 --Summary
-select x.tahun as "TAHUN", x.bulan as "BULAN", x.namacabang as "NAMA CABANG",sum(x.wa_status) as "JUMLAH WA REMIND"  
+--select x.tahun as "TAHUN", x.bulan as "BULAN", x.namacabang as "NAMA CABANG",sum(x.wa_status) as "JUMLAH WA REMIND"  
+--from (
+--	select 
+--	TO_CHAR(kolom_d::date, 'YYYY') AS tahun,
+--	TO_CHAR(kolom_d::date, 'MM') AS bulan,
+--	namacabang,sum(wa_status) as wa_status
+--	from public.mb_trx_oil_goliaht_his 
+--	where wa_status=1 --and kolom_d::date between '2024-10-01' and '2025-07-31' 
+--	group by namacabang, kolom_d::date
+--)as x
+--group by x.tahun, x.bulan, x.namacabang
+--order by x.tahun, x.bulan, x.namacabang;
+select 
+x.tahun as "TAHUN", 
+x.bulan as "BULAN", 
+x.namacabang as "NAMA CABANG",
+sum(x.wa_status) as "JUMLAH WA REMIND",
+sum(total_read) as "JUMLAH STATUS READ",
+sum(total_sent) as "JUMLAH STATUS SENT",
+sum(total_failed) as "JUMLAH STATUS FAILED",
+sum(total_delivered) as "JUMLAH STATUS DELIVERED",
+sum(total_null) as "JUMLAH STATUS KOSONG"
 from (
 	select 
-	TO_CHAR(kolom_d::date, 'YYYY') AS tahun,
-	TO_CHAR(kolom_d::date, 'MM') AS bulan,
-	namacabang,sum(wa_status) as wa_status
+	TO_CHAR(kolom_d, 'YYYY') AS tahun,
+	TO_CHAR(kolom_d, 'MM') AS bulan,
+	namacabang,sum(wa_status) as wa_status,
+	COUNT(*) FILTER (WHERE wa_status_data = 'read') AS total_read,
+    COUNT(*) FILTER (WHERE wa_status_data = 'sent') AS total_sent,
+    COUNT(*) FILTER (WHERE wa_status_data = 'failed') AS total_failed,
+    COUNT(*) FILTER (WHERE wa_status_data = 'delivered') AS total_delivered,
+    COUNT(*) FILTER (WHERE wa_status_data IS NULL) AS total_null
 	from public.mb_trx_oil_goliaht_his 
-	where wa_status=1 --and kolom_d::date between '2024-10-01' and '2025-07-31' 
-	group by namacabang, kolom_d::date
+	where wa_status=1
+	group by namacabang, kolom_d
 )as x
-group by x.tahun, x.bulan, x.namacabang
-order by x.tahun, x.bulan, x.namacabang;
+group by x.tahun,x.bulan,x.namacabang
+order by x.tahun asc, x.bulan asc;
 
 --Detail
 select * from public.mb_trx_oil_goliaht_his 
