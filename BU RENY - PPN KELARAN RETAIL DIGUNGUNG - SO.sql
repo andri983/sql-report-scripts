@@ -52,10 +52,10 @@ FROM(
 		F.namaDc as KodeTokocabang,
 		'Sales' AS jenisTransaksi,
 		' ' AS NomorRefTransaksi
-	FROM PB_DC.DBO.shipmentHeader a
-	JOIN PB_DC.DBO.SMISalesOrderHeader c with (NOLOCK)on a.nomorSo=c.nomorso AND a.nomorUSo=c.nomorUso AND a.idDc=c.idDc
-	JOIN PB_DC.DBO.SMIMstCustumerSalesorder e with (NOLOCK) on c.idCustumer=e.idCustumer
-	JOIN PB_DC.DBO.MstDC f with (NOLOCK) on f.idDc=a.idDc
+	FROM PB_DC_JKT.DBO.shipmentHeader a
+	JOIN PB_DC_JKT.DBO.SMISalesOrderHeader c with (NOLOCK)on a.nomorSo=c.nomorso AND a.nomorUSo=c.nomorUso AND a.idDc=c.idDc
+	JOIN PB_DC_JKT.DBO.SMIMstCustumerSalesorder e with (NOLOCK) on c.idCustumer=e.idCustumer
+	JOIN PB_DC_JKT.DBO.MstDC f with (NOLOCK) on f.idDc=a.idDc
 	WHERE convert(date,a.tglApprove) >= DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 1, 0)
 	AND convert(date,a.tglApprove) <  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)
 	AND a.statusData=1
@@ -79,15 +79,14 @@ UNION ALL
 		C.namaDc as KodeTokocabang,
 		'Retur' AS jenisTransaksi,
 		a.Nomorshipment AS NomorRefTransaksi
-	FROM PB_DC.DBO.SmiReturSalesOrderHeader a
-	JOIN PB_DC.DBO.SMIMstCustumerSalesorder b with (NOLOCK) on a.idCustomer=b.idCustumer
-	JOIN PB_DC.DBO.MstDC c with (NOLOCK) on c.idDc=a.idDc
+	FROM PB_DC_JKT.DBO.SmiReturSalesOrderHeader a
+	JOIN PB_DC_JKT.DBO.SMIMstCustumerSalesorder b with (NOLOCK) on a.idCustomer=b.idCustumer
+	JOIN PB_DC_JKT.DBO.MstDC c with (NOLOCK) on c.idDc=a.idDc
 	WHERE convert(date,a.tglApprove) >= DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 1, 0)
 	AND convert(date,a.tglApprove) <  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)
 	AND a.StatusReceipt=1
 	) as x
-END
-GO;
+END;
 
 
 EXEC GetSMIDigunggungSalesOrder;
@@ -126,3 +125,25 @@ EXEC GetSMIDigunggungSalesOrder;
 
 SELECT insertdate, namadccabang, trxcode, buyername, buyeridopt, buyeridnumber, goodserviceopt, serialno, transactiondate, taxbasesellingprice, othertaxbasesellingprice, vat, stlg, info, modul, kodetokocabang, jenistransaksi, nomorreftransaksi
 FROM public.tax_digunggung_salesorder;
+
+
+--- JOB QUERY
+SELECT 
+trxcode as "TrxCode", 
+buyername as "BuyerName", 
+buyeridopt as "BuyerIdOpt", 
+buyeridnumber as "BuyerIdNumber", 
+goodserviceopt as "GoodServiceOpt", 
+serialno::text as "SerialNo", 
+transactiondate as "TransactionDate", 
+taxbasesellingprice as "TaxBaseSellingPrice", 
+othertaxbasesellingprice as "OtherTaxBaseSellingPrice", 
+vat as "VAT", 
+stlg as "STLG", 
+info as "Info", 
+modul as "Modul", 
+kodetokocabang as "KodeTokocabang", 
+jenistransaksi as "JenisTransaksi", 
+nomorreftransaksi::text as "NomorRefTransaksi"
+FROM public.tax_digunggung_salesorder
+where namadccabang='DC DENPASAR';

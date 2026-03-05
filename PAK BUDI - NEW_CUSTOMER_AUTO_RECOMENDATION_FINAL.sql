@@ -709,11 +709,13 @@ $function$
 
 
 
+select * from smi_rms20_transaksi_toko_perjenis_member_v3 where nopolisi='K2716BDE';
+select * from public.car_base_nopol where nopolisi='K2716BDE';
 
 select * from public.car_his where qty<0;
 select * from public.car_his where tglreport=current_date-1 and nopolisi='L6370AAK';
 select distinct namacabang from public.car_his where tglreport=current_date;
-select nopolisi,count(*) from public.car_his where tglreport=current_date group by nopolisi HAVING COUNT(*) > 1;
+select nopolisi,count(*) from public.car_his where tglreport='2025-12-27' group by nopolisi HAVING COUNT(*) > 1;
 select * from public.car_voucher where nomorserivoucher in ('6222BRD9W7VR','62226887T5MM') order by idvoucher;--OK
 select * from public.car_voucher where statuskirim=0;--OK
 select * from public.car_base_nopol order by insertdate desc;--OK

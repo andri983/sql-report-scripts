@@ -17,8 +17,8 @@ CREATE FOREIGN TABLE mb_rms01_mbho.smimstvoucherdiskon (
 SERVER mobeng_rms01
 OPTIONS (schema_name 'dbo', table_name 'SMIMstVoucherDiskon');
 
-select * from mb_rms01_mbho.smimstvoucherdiskon
-
+select * from mb_rms01_mbho.smimstvoucherdiskon where statusdata=1 and idmarchant=35 order by tglcreate desc;
+select * from mb_rms01_mbho.smimstvoucherpersen where statusdata=1 and idmarchant=3 order by tglcreate desc;
 
 -----CREATE FOREIGN TABLE (select * from mb_rms01_mbho.SMIMstVoucherPersen;)---20250929
 
@@ -69,10 +69,11 @@ AND NOT EXISTS (
     FROM public.mb_goliaht_voucher c
     WHERE c.nomorserivoucher = s.nomorserivoucher
 );
-
+    
 ------CREATE INSERT INTO (mb_rms01_mbho.smimstvoucherpersen-public.goliaht_voucher)---20250929
 
-SELECT *
+INSERT INTO public.mb_goliaht_voucher (insertdate,idvoucher,idgroupvoucher,idmarchant,nomorserivoucher,statuskirim)
+SELECT NOW() AS insertdate,s.idvoucher,s.idgroupvoucher,s.idmarchant,s.nomorserivoucher,0 AS statuskirim
 FROM mb_rms01_mbho.smimstvoucherpersen s
 WHERE s.statusdata=1 and s.idmarchant=3
 AND NOT EXISTS (

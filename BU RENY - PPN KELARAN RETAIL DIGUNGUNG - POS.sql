@@ -36,22 +36,21 @@ SELECT
 		ELSE '0'
 	END AS jenisTransaksi,
 	F.NomorRefTransaksi
-FROM PB_DC.DBO.TransaksiTokoheader AS A with (NOLOCK)
-LEFT JOIN PB_DC.DBO.SMITransaksiTokoPerjenisMember AS B with (NOLOCK) ON A.kodetoko=B.kodetoko AND A.nomortransaksi=B.nomortransaksi
-LEFT JOIN PB_DC.DBO.mstJenisMember AS C with (NOLOCK) ON B.IdJenisMember=C.IdJenisMember
-LEFT JOIN PB_DC.DBO.MstMember AS D with (NOLOCK) ON D.NoPolisi=b.NoPolisi
-LEFT JOIN PB_DC.DBO.MstToko AS E with (NOLOCK) ON E.kodetoko=A.kodetoko
-LEFT JOIN PB_DC.DBO.TransaksiReturSalesHeader AS F with (NOLOCK) ON F.kodetoko=A.kodetoko AND F.nomorRefTransaksi2=A.nomorTransaksi
-LEFT JOIN PB_DC.DBO.MasterToolsToko AS G with (NOLOCK) ON G.kodetoko=A.kodeToko
-LEFT JOIN PB_DC.DBO.MstCabang AS H with (NOLOCK) ON H.idcabang=G.idcabang
+FROM PB_DC_JKT.DBO.TransaksiTokoheader AS A with (NOLOCK)
+LEFT JOIN PB_DC_JKT.DBO.SMITransaksiTokoPerjenisMember AS B with (NOLOCK) ON A.kodetoko=B.kodetoko AND A.nomortransaksi=B.nomortransaksi
+LEFT JOIN PB_DC_JKT.DBO.mstJenisMember AS C with (NOLOCK) ON B.IdJenisMember=C.IdJenisMember
+LEFT JOIN PB_DC_JKT.DBO.MstMember AS D with (NOLOCK) ON D.NoPolisi=b.NoPolisi
+LEFT JOIN PB_DC_JKT.DBO.MstToko AS E with (NOLOCK) ON E.kodetoko=A.kodetoko
+LEFT JOIN PB_DC_JKT.DBO.TransaksiReturSalesHeader AS F with (NOLOCK) ON F.kodetoko=A.kodetoko AND F.nomorRefTransaksi2=A.nomorTransaksi
+LEFT JOIN PB_DC_JKT.DBO.MasterToolsToko AS G with (NOLOCK) ON G.kodetoko=A.kodeToko
+LEFT JOIN PB_DC_JKT.DBO.MstCabang AS H with (NOLOCK) ON H.idcabang=G.idcabang
 WHERE E.kodestatustoko='R' 
 AND A.TglBisnis >= DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 1, 0)
 AND A.TglBisnis <  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)
 --AND A.TglBisnis BETWEEN '2025-11-01' AND '2025-11-30'
 --AND A.kodetoko=3021297 AND A.nomorTransaksi=202511160005;
---SELECT * FROM PB_DC.dbo.TransaksiTokoHeader where kodetoko=3021297 and nomorTransaksi=202511160005;
-END
-GO
+--SELECT * FROM PB_DC_JKT.dbo.TransaksiTokoHeader where kodetoko=3021297 and nomorTransaksi=202511160005;
+END;
 
 
 EXEC GetSMIDigunggungPos;
@@ -94,21 +93,22 @@ FROM public.tax_digunggung_pos;
 
 --- JOB QUERY
 SELECT 
-trxcode, 
-buyername, 
-buyeridopt, 
-buyeridnumber, 
-goodserviceopt, 
-serialno::text, 
-transactiondate, 
-taxbasesellingprice, 
-othertaxbasesellingprice, 
-vat, 
-stlg, 
-info, 
-modul, 
-kodetokocabang, 
-jenistransaksi, 
-nomorreftransaksi
+trxcode as "TrxCode", 
+buyername as "BuyerName", 
+buyeridopt as "BuyerIdOpt", 
+buyeridnumber as "BuyerIdNumber", 
+goodserviceopt as "GoodServiceOpt", 
+serialno::text as "SerialNo", 
+transactiondate as "TransactionDate", 
+taxbasesellingprice as "TaxBaseSellingPrice", 
+othertaxbasesellingprice as "OtherTaxBaseSellingPrice", 
+vat as "VAT", 
+stlg as "STLG", 
+info as "Info", 
+modul as "Modul", 
+kodetokocabang as "KodeTokocabang", 
+jenistransaksi as "JenisTransaksi", 
+nomorreftransaksi::text as "NomorRefTransaksi"
 FROM public.tax_digunggung_pos
-where namadccabang='Semarang';
+WHERE namadccabang='Denpasar'
+ORDER BY transactiondate,serialno;

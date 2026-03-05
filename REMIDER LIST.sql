@@ -4,9 +4,16 @@ select count(*) from public.mb_goliaht_voucher where statuskirim=0;
 
 select count(*) from public.car_voucher where statuskirim=0;
 
+select count(*) from public.pkb_voucher where statuskirim=0;
+
+select * from public.pkb_his where statuskirim=0;
+
+select count(*) from public.lc_voucher where statuskirim=0;
 
 
+select * from public.car_his order by tglreport desc;
 
+select * from public.car_his where reminder='2026-02-19' 
 
 -------------------------------------------------------------------------------------------------------------------
 --Accu
@@ -43,10 +50,16 @@ group by x.tahun,x.bulan,x.namacabang
 order by x.tahun asc, x.bulan asc;
 -------------------------------------------------------------------------------------------------------------------
 --Offering
-select * from public.car_his;
-select * from public.car_his where reminder='2025-10-22' and wa_status=0;
+select * from public.car_base_nopol where nopolisi ='B5867SBB';
+select * from public.car_base_nopol where insertdate::date ='2026-02-12';
+
+select * from public.car_his order by tglreport desc;
+select * from public.car_his where reminder='2026-02-11' and wa_status=0;--12,10,8,7,6
+select * from public.car_his where tglreport='2026-02-12'
 select * from public.car_his where wa_status=1;
 select * from public.car_his where wa_status=1 and wa_status_data is null;
+
+        SELECT * FROM public.smi_rms10_transaksi_toko_perjenis_member_v3 where nopolisi='B5867SBB'
 
 --Summary
 select 
@@ -156,14 +169,18 @@ group by x.tahun,x.bulan,x.namacabang
 order by x.tahun asc, x.bulan asc;
 
 --Detail
-select * from public.smi_trx_oil_goliaht_his where wa_status=1 and kolom_d::date between '2025-10-01' and '2025-10-31';
+select * from public.smi_trx_oil_goliaht_his order by kolom_d desc limit 1;
+select * from public.smi_trx_oil_goliaht_his where wa_status=1 and kolom_d::date between '2025-12-01' and '2025-12-31' and wa_status_data is NULL;
 select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and wa_status=0; 
 select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and kolom_ac='-30' and wa_status=0; 
 select * from public.smi_trx_oil_goliaht_his where wa_status=1;
 select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-15' and kolom_ac='0' and namacabang='Jakarta Baru';
-select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-11' and wa_status=0 and kolom_ac='0';
-select distinct namacabang from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-21' and kolom_ac='0';
-select distinct namacabang from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-22';
+select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2026-01-09' and kolom_ac='0' and wa_status=0;
+select distinct namacabang from public.smi_trx_oil_goliaht_his where kolom_d::date='2026-01-12' and kolom_ac='0';
+select distinct namacabang from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-30';
+select * from public.smi_trx_oil_goliaht_monitoring_all where kolom_d::date='2026-01-03' and namacabang='Jakarta Baru'
+
+select distinct namacabang from smi_rpt_goliaht_last_trx_monthly_temp order by tanggal desc;
 -------------------------------------------------------------------------------------------------------------------
 --Goliaht MOB
 --Summary
@@ -209,5 +226,5 @@ order by x.tahun asc, x.bulan asc;
 --Detail
 select * from public.mb_trx_oil_goliaht_his 
 where wa_status=1 and kolom_d::date between '2025-11-16' and '2025-11-16';
-select * from public.mb_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and wa_status=0; 
+select * from public.mb_trx_oil_goliaht_his where kolom_d::date='2026-01-10' and wa_status=0; 
 -------------------------------------------------------------------------------------------------------------------
