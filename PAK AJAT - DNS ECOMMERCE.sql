@@ -196,5 +196,7 @@ CREATE TABLE public.smi_sales_ecommerce_detail (
 
 
 ----CREATE JOB QUERY
-SELECT tglbisnis, namacabang, kodetoko, namatoko, nomortransaksi::text, brand, jenis, category, kodeproduk, namapanjang, qty, hpp, hargajualnormal, disc, subtotal, noreferensitransaksi, namabank
-FROM public.smi_sales_ecommerce_detail;
+SELECT a.tglbisnis, a.namacabang, a.kodetoko, a.namatoko, a.nomortransaksi::text, a.brand, a.jenis, a.category, a.kodeproduk, a.namapanjang, a.qty, a.hpp, a.hargajualnormal, a.disc, a.subtotal, a.noreferensitransaksi, a.namabank
+FROM public.smi_sales_ecommerce_detail a
+LEFT JOIN tally_webhooks_db.ginee_order_summary b on b.external_order_id=a.noreferensitransaksi;
+

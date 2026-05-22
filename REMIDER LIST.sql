@@ -6,8 +6,6 @@ select count(*) from public.car_voucher where statuskirim=0;
 
 select count(*) from public.pkb_voucher where statuskirim=0;
 
-select * from public.pkb_his where statuskirim=0;
-
 select count(*) from public.lc_voucher where statuskirim=0;
 
 
@@ -59,7 +57,7 @@ select * from public.car_his where tglreport='2026-02-12'
 select * from public.car_his where wa_status=1;
 select * from public.car_his where wa_status=1 and wa_status_data is null;
 
-        SELECT * FROM public.smi_rms10_transaksi_toko_perjenis_member_v3 where nopolisi='B5867SBB'
+SELECT * FROM public.smi_rms10_transaksi_toko_perjenis_member_v3 where nopolisi='B5867SBB'
 
 --Summary
 select 
@@ -175,7 +173,8 @@ select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-10-22' an
 select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-10-22' and kolom_ac='-30' and wa_status=0; 
 select * from public.smi_trx_oil_goliaht_his where wa_status=1;
 select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-15' and kolom_ac='0' and namacabang='Jakarta Baru';
-select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2026-01-09' and kolom_ac='0' and wa_status=0;
+select * from public.smi_trx_oil_goliaht_his where kolom_d::date='2026-04-04' and kolom_ac='0' and wa_status=0;
+select * from public.smi_trx_oil_goliaht_his where kolom_ac='0' and wa_status=1 order by kolom_d DESC;
 select distinct namacabang from public.smi_trx_oil_goliaht_his where kolom_d::date='2026-01-12' and kolom_ac='0';
 select distinct namacabang from public.smi_trx_oil_goliaht_his where kolom_d::date='2025-12-30';
 select * from public.smi_trx_oil_goliaht_monitoring_all where kolom_d::date='2026-01-03' and namacabang='Jakarta Baru'
@@ -227,4 +226,6 @@ order by x.tahun asc, x.bulan asc;
 select * from public.mb_trx_oil_goliaht_his 
 where wa_status=1 and kolom_d::date between '2025-11-16' and '2025-11-16';
 select * from public.mb_trx_oil_goliaht_his where kolom_d::date='2026-01-10' and wa_status=0; 
+select * from public.mb_trx_oil_goliaht_his where kolom_d::date='2026-01-10' and wa_status=0; 
+
 -------------------------------------------------------------------------------------------------------------------
