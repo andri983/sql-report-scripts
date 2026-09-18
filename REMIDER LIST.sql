@@ -8,8 +8,146 @@ select count(*) from public.pkb_voucher where statuskirim=0;
 
 select count(*) from public.lc_voucher where statuskirim=0;
 
+select * from public.car_voucher WHERE insertdate::date='2026-07-01'
 
-select * from public.car_his order by tglreport desc;
+select * from public.smi_trx_oil_goliaht_his order by kolom_d DESC LIMIT 100;
+select * from public.smi_trx_oil_goliaht_his where kolom_d='2026-09-01';
+select * from public.mb_trx_oil_goliaht_his order by kolom_d DESC LIMIT 100;
+select * from public.mb_trx_oil_goliaht_his where kolom_d='2026-09-03';
+select * from public.pra_his order by reportdate DESC LIMIT 5;
+select * from public.car_his order by tglreport DESC LIMIT 5;
+select * from public.pkb_his order by tanggal DESC LIMIT 5;
+select * from public.lc_his order by tanggal DESC LIMIT 5;
+--select * from public.scis_his order by tglreport DESC LIMIT 5;
+
+===================================================================================================================
+===================================================================================================================
+---GOLIAHT SMI
+===================================================================================================================
+---SUMMARY
+select 
+x.tahun as "TAHUN", 
+x.bulan as "BULAN", 
+x.namacabang as "NAMA CABANG",
+sum(x.wa_status) as "JUMLAH WA REMIND",
+sum(total_read) as "JUMLAH STATUS READ",
+sum(total_sent) as "JUMLAH STATUS SENT",
+sum(total_failed) as "JUMLAH STATUS FAILED",
+sum(total_delivered) as "JUMLAH STATUS DELIVERED",
+sum(total_null) as "JUMLAH STATUS KOSONG"
+from (
+	select 
+	TO_CHAR(kolom_d, 'YYYY') AS tahun,
+	TO_CHAR(kolom_d, 'MM') AS bulan,
+	namacabang,sum(wa_status) as wa_status,
+	COUNT(*) FILTER (WHERE wa_status_data = 'read') AS total_read,
+    COUNT(*) FILTER (WHERE wa_status_data = 'sent') AS total_sent,
+    COUNT(*) FILTER (WHERE wa_status_data = 'failed') AS total_failed,
+    COUNT(*) FILTER (WHERE wa_status_data = 'delivered') AS total_delivered,
+    COUNT(*) FILTER (WHERE wa_status_data IS NULL) AS total_null
+	from public.smi_trx_oil_goliaht_his 
+--	WHERE kolom_d >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+-- 	 AND kolom_d < DATE_TRUNC('month', CURRENT_DATE)
+	where wa_status=1
+	group by namacabang, kolom_d
+)as x
+group by x.tahun,x.bulan,x.namacabang
+order by x.tahun asc, x.bulan asc;
+
+--DETAIL
+SELECT 
+* 
+FROM public.smi_trx_oil_goliaht_his
+WHERE kolom_d >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+  AND kolom_d < DATE_TRUNC('month', CURRENT_DATE)
+--  AND wa_status=0
+ORDER BY kolom_d ASC, kolom_c ASC;
+===================================================================================================================
+===================================================================================================================
+---LOYAL CUSTOMER
+===================================================================================================================
+---SUMMARY
+SELECT 
+x.tahun as "TAHUN", 
+x.bulan as "BULAN", 
+--x.idcabang as "ID CABANG",
+sum(x.wa_status) as "JUMLAH WA REMIND",
+sum(total_read) as "JUMLAH STATUS READ",
+sum(total_sent) as "JUMLAH STATUS SENT",
+sum(total_failed) as "JUMLAH STATUS FAILED",
+sum(total_delivered) as "JUMLAH STATUS DELIVERED",
+sum(total_null) as "JUMLAH STATUS KOSONG"
+from (
+	select 
+	TO_CHAR(tglreport, 'YYYY') AS tahun,
+	TO_CHAR(tglreport, 'MM') AS bulan,
+	idcabang,sum(wa_status) as wa_status,
+	COUNT(*) FILTER (WHERE wa_status_data = 'read') AS total_read,
+    COUNT(*) FILTER (WHERE wa_status_data = 'sent') AS total_sent,
+    COUNT(*) FILTER (WHERE wa_status_data = 'failed') AS total_failed,
+    COUNT(*) FILTER (WHERE wa_status_data = 'delivered') AS total_delivered,
+    COUNT(*) FILTER (WHERE wa_status_data IS NULL) AS total_null
+	from public.lc_his 
+--	WHERE tglreport >= DATE_TRUNC('month', CURRENT_DATE)
+--  	AND tglreport < DATE_TRUNC('month', CURRENT_DATE + INTERVAL '1 month')
+  	--AND wa_status=1
+	group by idcabang, tglreport
+)as x
+group by x.tahun,x.bulan
+order by x.tahun asc, x.bulan asc;
+
+--DETAIL
+SELECT 
+* 
+FROM public.lc_his 
+WHERE tglreport >= DATE_TRUNC('month', CURRENT_DATE)
+  AND tglreport < DATE_TRUNC('month', CURRENT_DATE + INTERVAL '1 month')
+--  AND wa_status=0
+ORDER BY nopolisi ASC;
+===================================================================================================================
+===================================================================================================================
+---PROGRAM KHUSUS BAN
+===================================================================================================================
+---SUMMARY
+SELECT 
+x.tahun as "TAHUN", 
+x.bulan as "BULAN", 
+--x.idcabang as "ID CABANG",
+sum(x.wa_status) as "JUMLAH WA REMIND",
+sum(total_read) as "JUMLAH STATUS READ",
+sum(total_sent) as "JUMLAH STATUS SENT",
+sum(total_failed) as "JUMLAH STATUS FAILED",
+sum(total_delivered) as "JUMLAH STATUS DELIVERED",
+sum(total_null) as "JUMLAH STATUS KOSONG"
+from (
+	select 
+	TO_CHAR(tglreport, 'YYYY') AS tahun,
+	TO_CHAR(tglreport, 'MM') AS bulan,
+	sum(wa_status) as wa_status,
+	COUNT(*) FILTER (WHERE wa_status_data = 'read') AS total_read,
+    COUNT(*) FILTER (WHERE wa_status_data = 'sent') AS total_sent,
+    COUNT(*) FILTER (WHERE wa_status_data = 'failed') AS total_failed,
+    COUNT(*) FILTER (WHERE wa_status_data = 'delivered') AS total_delivered,
+    COUNT(*) FILTER (WHERE wa_status_data IS NULL) AS total_null
+	from public.pkb_his 
+--	WHERE tglreport >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+--  	AND tglreport < DATE_TRUNC('month', CURRENT_DATE)
+--  	AND wa_status=1
+	group by tglreport
+)as x
+group by x.tahun,x.bulan--,x.idcabang
+order by x.tahun asc, x.bulan asc;
+
+--DETAIL
+SELECT 
+* 
+FROM public.pkb_his 
+WHERE tglreport >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+  AND tglreport < DATE_TRUNC('month', CURRENT_DATE)
+--  AND wa_status=1
+ORDER BY tglreport ASC, nopolisi ASC;
+===================================================================================================================
+
 
 select * from public.car_his where reminder='2026-02-19' 
 
@@ -160,7 +298,7 @@ from (
     COUNT(*) FILTER (WHERE wa_status_data = 'delivered') AS total_delivered,
     COUNT(*) FILTER (WHERE wa_status_data IS NULL) AS total_null
 	from public.smi_trx_oil_goliaht_his 
-	where wa_status=1
+--	where wa_status=1
 	group by namacabang, kolom_d
 )as x
 group by x.tahun,x.bulan,x.namacabang
